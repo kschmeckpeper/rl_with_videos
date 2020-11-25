@@ -255,8 +255,8 @@ def get_parser(allow_policy_list=False):
 
 
     parser.add_argument(
-        "--inverse_domain_shift",
-        dest="inverse_domain_shift",
+        "--domain_shift",
+        dest="domain_shift",
         action="store_true",
         )
 
@@ -267,13 +267,13 @@ def get_parser(allow_policy_list=False):
         )
 
     parser.add_argument(
-        "--inv_model_ds_discriminator_weight",
+        "--domain_shift_discriminator_weight",
         type=float,
         default=0.01,
         )
 
     parser.add_argument(
-        "--inv_model_ds_generator_weight",
+        "--domain_shift_generator_weight",
         type=float,
         default=0.01,
         )

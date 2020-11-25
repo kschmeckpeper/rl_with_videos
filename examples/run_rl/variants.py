@@ -206,12 +206,12 @@ def get_variant_spec(args):
                 'conv_filters': [64] * 5,
                 'conv_kernel_sizes': [3] * 5,
                 'conv_strides': [2] * 5,
-                'inverse_domain_shift': args.inverse_domain_shift,
+                'domain_shift': args.domain_shift,
             }
             variant_spec['algorithm_params']['kwargs']['preprocessor_for_inverse'] = args.preprocessor_for_inverse
-            variant_spec['algorithm_params']['kwargs']['inverse_domain_shift'] = args.inverse_domain_shift
-            variant_spec['algorithm_params']['kwargs']['inv_model_ds_generator_weight'] = args.inv_model_ds_generator_weight
-            variant_spec['algorithm_params']['kwargs']['inv_model_ds_discriminator_weight'] = args.inv_model_ds_discriminator_weight
+            variant_spec['algorithm_params']['kwargs']['domain_shift'] = args.domain_shift
+            variant_spec['algorithm_params']['kwargs']['domain_shift_generator_weight'] = args.domain_shift_generator_weight
+            variant_spec['algorithm_params']['kwargs']['domain_shift_discriminator_weight'] = args.domain_shift_discriminator_weight
 
 
 

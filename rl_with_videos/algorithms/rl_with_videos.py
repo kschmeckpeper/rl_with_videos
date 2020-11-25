@@ -17,9 +17,9 @@ class RLV(SAC):
                  use_ground_truth_actions=False,
                  use_zero_actions=False,
                  preprocessor_for_inverse=False,
-                 inverse_domain_shift=False,
-                 inv_model_ds_generator_weight=0.01,
-                 inv_model_ds_discriminator_weight=0.01,
+                 domain_shift=False,
+                 domain_shift_generator_weight=0.01,
+                 domain_shift_discriminator_weight=0.01,
                  paired_loss_scale=1.0,
                  paired_data_pool=None,
                  shared_preprocessor_model=None,
@@ -33,15 +33,14 @@ class RLV(SAC):
         self._shared_preprocessor_model = shared_preprocessor_model
 
         self._action_free_pool = kwargs.pop('action_free_pool')
-        self._inverse_model, self._inverse_domain_model = kwargs.pop('inverse_model')
+        self._inverse_model, self._domain_shift_model = kwargs.pop('inverse_model')
         self._inverse_model_lr = 3e-4
-        self._inverse_model_discrim_lr = 3e-4
-
+        self._domain_shift_discrim_lr = 3e-4
         self._paired_loss_lr = 3e-4
 
-        self._inverse_domain_shift = inverse_domain_shift
-        self._inverse_model_domain_shift_generator_weight = inv_model_ds_generator_weight
-        self._inverse_model_domain_shift_discriminator_weight = inv_model_ds_discriminator_weight
+        self._domain_shift = domain_shift
+        self._domain_shift_generator_weight = domain_shift_generator_weight
+        self._domain_shift_discriminator_weight = domain_shift_discriminator_weight
 
         self._remove_rewards = remove_rewards
         self._replace_rewards_scale = replace_rewards_scale
@@ -148,7 +147,7 @@ class RLV(SAC):
                                            name="obs_of_interaction_no_aug")
                 }
 
-        if self._inverse_domain_shift:
+        if self._domain_shift:
             self._domains_ph = tf.placeholder(tf.float32, shape=(None, 1), name='domains')
 
 
@@ -181,7 +180,7 @@ class RLV(SAC):
         if iteration is not None:
             feed_dict[self._placeholders['action_conditioned']['iteration']] = iteration
 
-        if self._inverse_domain_shift:
+        if self._domain_shift:
             feed_dict[self._domains_ph] = np.concatenate([np.zeros(batch['action_conditioned']['terminals'].shape),
                                                   np.ones(batch['action_free']['terminals'].shape)])
 
@@ -280,7 +279,7 @@ class RLV(SAC):
                 labels=true_actions, predictions=pred_seen_actions)
 
 
-        if self._inverse_domain_shift:
+        if self._domain_shift:
 
             if self._paired_data_pool is not None:
                 combined_paired_data = tf.concat([self._placeholders['paired_data']['obs_of_interaction'],
@@ -297,25 +296,25 @@ class RLV(SAC):
                                                                            var_list=self._shared_preprocessor_model.trainable_variables)
                 self._training_ops.update({'paired_loss': paired_train_op})
 
-            pred_domains = self._inverse_domain_model(prev_states)
+            pred_domains = self._domain_shift_model(prev_states)
             discriminator_loss = tf.keras.losses.BinaryCrossentropy()(self._domains_ph, pred_domains)
             generator_loss = tf.keras.losses.BinaryCrossentropy()(1.0 - self._domains_ph, pred_domains)
 
-            self._inverse_model_ds_score = tf.reduce_sum(tf.cast(tf.abs(pred_domains - self._domains_ph) <= 0.5, tf.float32)) / 512
+            self._domain_shift_score = tf.reduce_sum(tf.cast(tf.abs(pred_domains - self._domains_ph) <= 0.5, tf.float32)) / 512
 
-            self._inverse_model_ds_generator_loss = generator_loss
-            self._inverse_model_ds_discriminator_loss = discriminator_loss
+            self._domain_shift_generator_loss = generator_loss
+            self._domain_shift_discriminator_loss = discriminator_loss
 
 
-            inverse_model_loss = inverse_model_loss + generator_loss * self._inverse_model_domain_shift_generator_weight
-            self._inverse_model_discriminator_loss = discriminator_loss * self._inverse_model_domain_shift_discriminator_weight
+            inverse_model_loss = inverse_model_loss + generator_loss * self._domain_shift_generator_weight
+            self._domain_shift_discriminator_loss = discriminator_loss * self._domain_shift_discriminator_weight
 
-            self._inverse_discrim_optimizer = tf.compat.v1.train.AdamOptimizer(
-                learning_rate=self._inverse_model_discrim_lr,
-                name='inverse_model_discrim_optimizer')
-            inverse_discrim_train_op = self._inverse_discrim_optimizer.minimize(loss=self._inverse_model_discriminator_loss,
-                                                                                var_list=self._inverse_domain_model.trainable_variables)
-            self._training_ops.update({'inverse_model_discriminator': inverse_discrim_train_op})
+            self._domain_shift_discrim_optimizer = tf.compat.v1.train.AdamOptimizer(
+                learning_rate=self._domain_shift_discrim_lr,
+                name='domain_shift_discrim_optimizer')
+            domain_shift_discrim_train_op = self._domain_shift_discrim_optimizer.minimize(loss=self._domain_shift_discriminator_loss,
+                                                                                var_list=self._domain_shift_model.trainable_variables)
+            self._training_ops.update({'domain_shift_discriminator': domain_shift_discrim_train_op})
 
 
         self._inverse_model_optimizer = tf.compat.v1.train.AdamOptimizer(
@@ -351,10 +350,10 @@ class RLV(SAC):
             ('inverse_model_loss', self._inverse_model_loss),
         )) 
 
-        if self._inverse_domain_shift:
-            diagnosables['inverse_model_domain_shift_discriminator'] = self._inverse_model_ds_discriminator_loss
-            diagnosables['inverse_model_domain_shift_generator'] = self._inverse_model_ds_generator_loss
-            diagnosables['inverse_model_domain_shift_score'] = self._inverse_model_ds_score
+        if self._domain_shift:
+            diagnosables['domain_shift_discriminator'] = self._domain_shift_discriminator_loss
+            diagnosables['domain_shift_generator'] = self._domain_shift_generator_loss
+            diagnosables['domain_shift_score'] = self._domain_shift_score
 
         if self._paired_data_pool is not None:
             diagnosables['paired_data_loss'] = self._paired_loss

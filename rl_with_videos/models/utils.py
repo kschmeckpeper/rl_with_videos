@@ -23,7 +23,7 @@ def get_inverse_model_from_variant(variant, env):
 
     if "Image" in variant['task'] and 'preprocessor_params' not in inverse_model_params:
         inverse_model_params.pop('hidden_layer_sizes')
-        inverse_model_params.pop('inverse_domain_shift')
+        inverse_model_params.pop('domain_shift')
         from .convnet import convnet_model
         network = convnet_model(**inverse_model_params,
                                 output_size=env.action_space.shape[0])
@@ -38,14 +38,14 @@ def get_inverse_model_from_variant(variant, env):
             preprocessor = get_preprocessor_from_params(env, preprocessor_params)
             preprocessor = (preprocessor, preprocessor)
 
-            if "inverse_domain_shift" in inverse_model_params:
+            if "domain_shift" in inverse_model_params:
                 domain_shift_model = feedforward_model(hidden_layer_sizes=variant['inverse_model']['hidden_layer_sizes'],
                                                        input_shapes=(env.observation_space.shape,),
                                                        output_size=1,
                                                        stop_gradients=True,
                                                        preprocessors=preprocessor,
                                                        output_activation='sigmoid',
-                                                       name="inverse_model_domain_shift_discriminator")
+                                                       name="domain_shift_discriminator")
         network = feedforward_model(hidden_layer_sizes=variant['inverse_model']['hidden_layer_sizes'],
                                     input_shapes=(env.observation_space.shape, env.observation_space.shape),
                                     output_size=env.action_space.shape[0],
