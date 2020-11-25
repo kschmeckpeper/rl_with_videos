@@ -218,12 +218,6 @@ def get_parser(allow_policy_list=False):
         help=("reward value for all non-terminal states"))
 
     parser.add_argument(
-        "--variational_inverse",
-        type=bool,
-        default=False,
-        help="Calculate the loss for the inverse model with the Q function")
-
-    parser.add_argument(
         "--max_demo_length",
         type=int,
         default=-1,
@@ -234,12 +228,6 @@ def get_parser(allow_policy_list=False):
         type=int,
         default=4,
         help="maximum distance to translate")
-
-    parser.add_argument(
-        '--should_grayscale',
-        type=bool,
-        default=False,
-        help='Should the images be converted to grayscale')
 
     parser.add_argument(
         '--domain_shift',
@@ -337,12 +325,6 @@ def get_parser(allow_policy_list=False):
         "--paired_loss_scale",
         type=float,
         default=0.1,
-        )
-
-    parser.add_argument(
-        "--contrastive_paired_loss",
-        dest="contrastive_paired_loss",
-        action="store_true",
         )
 
     parser.add_argument(

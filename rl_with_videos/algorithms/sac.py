@@ -52,8 +52,6 @@ class SAC(RLAlgorithm):
             auxiliary_loss_weight=0.01,
 
             should_augment=False,
-            should_grayscale=False,
-            max_shift=10,
             trans_dist=4,
 
             save_full_state=False,
@@ -132,9 +130,7 @@ class SAC(RLAlgorithm):
 
         self._train_policy_on_all_data = train_policy_on_all_data
 
-        self._should_grayscale = should_grayscale
         self._should_augment = should_augment
-        self._max_shift = max_shift
         self._trans_dist = trans_dist
 
         observation_shape = self._training_environment.active_observation_shape
@@ -503,43 +499,17 @@ class SAC(RLAlgorithm):
             self._update_target()
 
     def _augment_image(self, flat_image):
-        print("augment image:", flat_image.shape, type(flat_image))
-
         original_shape = flat_image.shape[1]
-        if not self._should_augment and not self._should_grayscale:
-            print("not augmenting")
+        if not self._should_augment:
             return flat_image
         image = tf.reshape(flat_image, (-1, 48, 48, 3))
-        print("image:", image)
 
-        if self._should_grayscale:
-            image = tf.image.rgb_to_grayscale(image)
-            print("image.shape", image.shape)
-            image = tf.stack([image, image, image])
-            print("image.shape:", image.shape)
         if self._should_augment:
-#            image = tf.image.random_brightness(image, 0.2)
-#            image = tf.image.random_contrast(image, 0.2, 0.5)
-#            image = tf.image.random_hue(image, 0.2)
-#            image = tf.image.random_saturation(image, 5, 10)
-
-            print("image:", image)
-    #        image = tf.Print(image, [tf.shape(image)], "image.shape", summarize=10)
-
             padding = tf.constant([[0, 0], [self._trans_dist, self._trans_dist], [self._trans_dist, self._trans_dist], [0, 0]])
             image = tf.pad(image, padding)
-    #        image = tf.Print(image, [tf.shape(image)], "padded image.shape", summarize=10)
-            print("padded image:", image)
             image = tf.image.random_crop(image, (256, 48, 48, 3))
-    #        image = tf.Print(image, [tf.shape(image)], "cropped image.shape", summarize=10)
-            print("after crop image:", image)
-    #        image = tf.image.resize(image, (48, 48))
-            print("after resize:", image)
 
         flattened_image = tf.reshape(image, (-1, original_shape))
-#        flattened_image = tf.Print(flattened_image, [tf.shape(flattened_image)], "flattened image shape", summarize=10)
-
-        print("flattened_shape:", flattened_image.shape)
         return flattened_image
 
     def _get_feed_dict(self, iteration, batch):

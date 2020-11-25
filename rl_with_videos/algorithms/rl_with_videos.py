@@ -11,7 +11,6 @@ from rl_with_videos.models.utils import flatten_input_structure
 
 class RLV(SAC):
     def __init__(self,
-                 weight_samples=False,
                  remove_rewards=False,
                  replace_rewards_scale=1.0,
                  replace_rewards_bottom=0.0,
@@ -23,7 +22,6 @@ class RLV(SAC):
                  inv_model_ds_discriminator_weight=0.01,
                  paired_loss_scale=1.0,
                  paired_data_pool=None,
-                 contrastive_paired_loss=False,
                  shared_preprocessor_model=None,
                  **kwargs):
         print("\n\n\n\n\nkwargs in rlv:", kwargs)
@@ -32,12 +30,10 @@ class RLV(SAC):
         print("shared preprocessor model", shared_preprocessor_model)
         self._paired_data_pool = paired_data_pool
         self._paired_loss_scale = paired_loss_scale
-        self._contrastive_paired_loss = contrastive_paired_loss
         self._shared_preprocessor_model = shared_preprocessor_model
 
         self._action_free_pool = kwargs.pop('action_free_pool')
         self._inverse_model, self._inverse_domain_model = kwargs.pop('inverse_model')
-        self._variational_inverse = kwargs.pop('variational_inverse')
         self._inverse_model_lr = 3e-4
         self._inverse_model_discrim_lr = 3e-4
 
@@ -56,9 +52,6 @@ class RLV(SAC):
 
         self._preprocessor_for_inverse = preprocessor_for_inverse
 
-        self._should_weight_samples = weight_samples
-        if weight_samples:
-            self._sample_weights = tf.reshape(tf.constant([1.0] * 256 + [1.0] * 256), (512, 1))
 
         super(RLV, self).__init__(**kwargs)
 
@@ -78,18 +71,6 @@ class RLV(SAC):
         self._init_actor_update()
         self._init_critic_update()
         self._init_diagnostics_ops()
-
-        if self._should_weight_samples:
-            print("self.Q_losses:", self._Q_losses)
-            print("q first:", self._Q_losses[0])
-            ratio = self._Q_losses[0][:self._Q_losses[0].shape[0]//2] / self._Q_losses[0][self._Q_losses[0].shape[0]//2:]
-            ratio = tf.clip_by_value(ratio, 0.0, 1.0)
-
-            action_conditioned_weight = 0.5 + 0.5 * ratio
-            action_free_weight = 0.5 - 0.5 * ratio
-            print("ratio:", ratio)
-            print("weights:", action_conditioned_weight, action_free_weight)
-            self._sample_weights = tf.reshape(tf.constant([action_conditioned_weight] * 256 + [action_free_weight] * 256), (512, 1))
 
     def _init_placeholders(self):
         action_conditioned_placeholders = {
@@ -212,7 +193,6 @@ class RLV(SAC):
 
     def _init_augmentation(self):
         top_level_keys = ['action_conditioned', 'action_free']
-        print("placeholder keys:", self._placeholders.keys())
         if 'paired_data' in self._placeholders.keys():
             top_level_keys.append('paired_data')
             print("\n\n\n\naugmenting paired data\n\n\n\n")
@@ -269,8 +249,6 @@ class RLV(SAC):
         `self._training_ops` attribute.
 
         """
-        print("initing inverse:")
-        print("self._policy", self._policy)
 
         next_states = tf.concat([self._placeholders['action_conditioned']['next_observations'],
                                  self._placeholders['action_free']['next_observations']], axis=0)
@@ -290,64 +268,28 @@ class RLV(SAC):
             action_con_next_obs = tf.reshape(action_con_next_obs, (-1, 48, 48, 3))
             action_free_obs = tf.reshape(action_free_obs, (-1, 48, 48, 3))
             action_free_next_obs = tf.reshape(action_free_next_obs, (-1, 48, 48, 3))
-        print("obs:", action_con_obs, action_con_next_obs)
         combined_first_obs = tf.concat([action_con_obs, action_free_obs], axis=0)
-        print("combined_first_obs:", combined_first_obs)
         combined_next_obs = tf.concat([action_con_next_obs, action_free_next_obs], axis=0)
-        print("combined next obs:", combined_next_obs)
         combined_pred_actions = self._inverse_model([combined_first_obs, combined_next_obs])
-#        pred_seen_actions = self._inverse_model([action_con_obs, action_con_next_obs])
-        
-#        pred_unseen_actions = self._inverse_model([action_free_obs, action_free_next_obs])
 
         pred_seen_actions = combined_pred_actions[:256]
         pred_unseen_actions = combined_pred_actions[256:]
-        print("pred_seen_actions:", pred_seen_actions)
 
 
-        if self._variational_inverse:
-            Q_log_scores = tuple(
-                Q([self._placeholders['action_free']['observations'], pred_unseen_actions])
-                for Q in self._Qs)
-            min_Q_log_score = tf.reduce_min(Q_log_scores, axis=0)
-            print("min scores:", min_Q_log_score)
-            m1 = tf.reduce_mean(pred_unseen_actions)
-            m2 = tf.reduce_mean(true_actions)
-            std1 = tfp.stats.stddev(pred_unseen_actions)
-            std2 = tfp.stats.stddev(true_actions)
-            kl = tf.reduce_mean(tf.log(std2 / std1) + (std1**2 + (m1 - m2)**2) / (2 * std2**2) - 0.5 )
-#            kl = tf.Print(kl, [kl], "kl")
-            print("kl:", kl)
-            self._inverse_model_kl = kl
-            self._inverse_model_q = tf.reduce_mean(-1 * min_Q_log_score)
-            inverse_model_loss = -1 * (tf.reduce_mean(-1 * min_Q_log_score) - kl)
-            inverse_model_loss = tf.Print(inverse_model_loss, [inverse_model_loss], "Inverse model loss")
-        else:
-            inverse_model_loss = tf.compat.v1.losses.mean_squared_error(
-                    labels=true_actions, predictions=pred_seen_actions)
-        print("variational inverse", self._variational_inverse)
-        print("inverse loss:", inverse_model_loss)
+        inverse_model_loss = tf.compat.v1.losses.mean_squared_error(
+                labels=true_actions, predictions=pred_seen_actions)
 
 
         if self._inverse_domain_shift:
 
             if self._paired_data_pool is not None:
-                print("\n\n\n\n\n\nusing paired data\n\n\n\n\n")
-                print("placeholders keys:", self._placeholders.keys())
-                print("paired data keys:", self._placeholders['paired_data'].keys())
                 combined_paired_data = tf.concat([self._placeholders['paired_data']['obs_of_interaction'],
                                                   self._placeholders['paired_data']['obs_of_observation']], axis=0)
                 paired_encodings = self._shared_preprocessor_model(combined_paired_data)
-                print("paired encodings:", paired_encodings.shape)
                 interaction_encodings = paired_encodings[:256]
-                print("interaction encodings:", interaction_encodings)
                 observation_encodings = paired_encodings[256:]
-                print("obseervation encodings:", observation_encodings)
                 self._paired_loss = self._paired_loss_scale * tf.keras.losses.MeanSquaredError()(interaction_encodings, observation_encodings)
                 
-                if self._contrastive_paired_loss:
-                    self._paired_loss -= self._paired_loss_scale * tf.keras.losses.MeanSquaredError()(interaction_encodings[:-1], observation_encodings[1:])
-    
                 self._paired_optimizer = tf.compat.v1.train.AdamOptimizer(
                         learning_rate=self._paired_loss_lr,
                         name='paired_loss_optimizer')
@@ -362,7 +304,6 @@ class RLV(SAC):
             self._inverse_model_ds_score = tf.reduce_sum(tf.cast(tf.abs(pred_domains - self._domains_ph) <= 0.5, tf.float32)) / 512
 
             if self._stop_overtraining:
-                print("stopping overtraining")
                 generator_loss = tf.Print(generator_loss, [generator_loss], "generator_loss before")
                 discriminator_loss = tf.Print(discriminator_loss, [discriminator_loss], "discriminator_loss before")
                 generator_loss = generator_loss * tf.cast(self._inverse_model_ds_score > 0.55, tf.float32)
@@ -372,15 +313,6 @@ class RLV(SAC):
 
             self._inverse_model_ds_generator_loss = generator_loss
             self._inverse_model_ds_discriminator_loss = discriminator_loss
-
-#            inverse_model_loss = tf.Print(inverse_model_loss, [pred_domains[:256] - self._domains_ph[:256]], "diff first:", summarize=10)
-#            inverse_model_loss = tf.Print(inverse_model_loss, [pred_domains[:256]], "pred first:", summarize=10)
-#            inverse_model_loss = tf.Print(inverse_model_loss, [self._domains_ph[:256]], "gt first:", summarize=10)
-#            inverse_model_loss = tf.Print(inverse_model_loss, [pred_domains[256:] - self._domains_ph[256:]], "diff second", summarize=10)
-#            inverse_model_loss = tf.Print(inverse_model_loss, [pred_domains[256:]], "pred second:", summarize=10)
-#            inverse_model_loss = tf.Print(inverse_model_loss, [self._domains_ph[256:]], "gt second:", summarize=10)
-
-
 
 
             inverse_model_loss = inverse_model_loss + generator_loss * self._inverse_model_domain_shift_generator_weight
@@ -405,8 +337,6 @@ class RLV(SAC):
 
         self._observations_ph = prev_states
         self._next_observations_ph = next_states
-        print("actions:", true_actions)
-        print("pred_actions:", pred_seen_actions, pred_unseen_actions)
         if not self._use_ground_truth_actions:
             self._actions_ph = tf.concat([true_actions, pred_unseen_actions], axis=0)
         else:
@@ -443,9 +373,6 @@ class RLV(SAC):
                 ('policy_domain_shift_loss', self._policy_domain_loss),
             ))
 
-        if self._variational_inverse:
-            diagnosables['inverse_model_q'] = self._inverse_model_q
-            diagnosables['inverse_model_kl'] = self._inverse_model_kl
         if self._auxiliary_loss:
             diagnosables['auxiliary_prediction_loss'] = self._auxiliary_pred_error
         if self._inverse_domain_shift:

@@ -89,7 +89,6 @@ ALGORITHM_PARAMS_ADDITIONAL = {
             'action_prior': 'uniform',
             'n_initial_exploration_steps': int(1e3),
             'n_epochs': 200,
-            'weight_samples': False,
         }
     },
 }
@@ -203,7 +202,6 @@ def get_variant_spec(args):
         variant_spec['algorithm_params']['kwargs']['auxiliary_loss'] = args.auxiliary_loss
         variant_spec['algorithm_params']['kwargs']['auxiliary_loss_weight'] = args.auxiliary_loss_weight
         variant_spec['algorithm_params']['kwargs']['paired_loss_scale'] = args.paired_loss_scale
-        variant_spec['algorithm_params']['kwargs']['contrastive_paired_loss'] = args.contrastive_paired_loss
         if args.algorithm in ('RLV'):
             variant_spec['inverse_model'] = {
                 'hidden_layer_sizes': [64, 64, 64],
@@ -213,7 +211,6 @@ def get_variant_spec(args):
                 'inverse_domain_shift': args.inverse_domain_shift,
             }
             variant_spec['algorithm_params']['kwargs']['train_policy_on_all_data'] = args.train_policy_on_all_data
-            variant_spec['algorithm_params']['kwargs']['variational_inverse'] = args.variational_inverse
             variant_spec['algorithm_params']['kwargs']['preprocessor_for_inverse'] = args.preprocessor_for_inverse
             variant_spec['algorithm_params']['kwargs']['inverse_domain_shift'] = args.inverse_domain_shift
             variant_spec['algorithm_params']['kwargs']['inv_model_ds_generator_weight'] = args.inv_model_ds_generator_weight
@@ -226,7 +223,6 @@ def get_variant_spec(args):
 
     variant_spec['algorithm_params']['kwargs']['should_augment'] = False
     variant_spec['algorithm_params']['kwargs']['trans_dist'] = args.trans_dist
-    variant_spec['algorithm_params']['kwargs']['should_grayscale'] = args.should_grayscale
     variant_spec['algorithm_params']['kwargs']['domain_shift'] = args.domain_shift
     variant_spec['algorithm_params']['kwargs']['domain_shift_weight'] = args.domain_shift_weight
     variant_spec['algorithm_params']['kwargs']['domain_shift_weight_q'] = args.domain_shift_weight_q
