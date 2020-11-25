@@ -46,9 +46,6 @@ class SAC(RLAlgorithm):
             domain_shift=False,
             domain_shift_weight=-0.01,
             domain_shift_weight_q=-0.01,
-            train_policy_on_all_data=True,
-            auxiliary_loss=False,
-            auxiliary_loss_weight=0.01,
 
             should_augment=False,
             trans_dist=4,
@@ -84,11 +81,8 @@ class SAC(RLAlgorithm):
         self._evaluation_environment = evaluation_environment
         self._policy = policy
 
-        self._Qs = [q for q, _, _, _, _ in Qs]
-        self._q_domain_models = [d for _, d, _, _, _ in Qs]
-        self._q_auxiliary_domain_models = [d for _, _, d, _, _ in Qs]
-        self._advantage_models = [d for _, _, _, d, _ in Qs]
-        self._value_models = [d for _, _, _, _, d in Qs]
+        self._Qs = [q for q, _ in Qs]
+        self._q_domain_models = [d for _, d in Qs]
         print("q domain models:", self._q_domain_models)
         self._Q_targets = tuple(tf.keras.models.clone_model(Q) for Q in self._Qs)
 
@@ -99,7 +93,6 @@ class SAC(RLAlgorithm):
         self._policy_lr = lr
         self._Q_lr = lr
         self._q_discrim_lr = lr
-        self._auxiliary_lr = lr
 
         self._reward_scale = reward_scale
         self._target_entropy = (
@@ -121,11 +114,6 @@ class SAC(RLAlgorithm):
         self._domain_shift_weight = domain_shift_weight
         self._domain_shift_weight_q = domain_shift_weight_q
         self._domain_shift_weight_q_d = -domain_shift_weight_q
-
-        self._auxiliary_loss = auxiliary_loss
-        self._auxiliary_loss_weight = auxiliary_loss_weight
-
-        self._train_policy_on_all_data = train_policy_on_all_data
 
         self._should_augment = should_augment
         self._trans_dist = trans_dist
@@ -316,26 +304,6 @@ class SAC(RLAlgorithm):
 
             self._training_ops.update({'Q_d': tf.group(q_discrim_training_ops)})
 
-            if self._auxiliary_loss:
-                pred_ims = [d([self._observations_ph, self._actions_ph]) for d in self._q_auxiliary_domain_models]
-                print("pred_ims:", pred_ims)
-                pred_error = [tf.keras.losses.MeanSquaredError()(pred, self._next_observations_ph) for pred in pred_ims]
-
-                
-                self._auxiliary_pred_error = pred_error
-
-                self._auxiliary_optims = tuple(
-                    tf.train.AdamOptimizer(learning_rate=self._auxiliary_lr,
-                        name="{}_{}_optimizer".format(model._name, i))
-                    for i, model in enumerate(self._q_auxiliary_domain_models))
-
-                auxiliary_training_ops = tuple(
-                    am_optim.minimize(loss=pred_e * self._auxiliary_loss_weight, var_list=am.trainable_variables)
-                    for i, (am, pred_e, am_optim)
-                    in enumerate(zip(self._q_auxiliary_domain_models, pred_error, self._auxiliary_optims)))
-
-                self._training_ops.update({'Aux_pred': tf.group(auxiliary_training_ops)})
-
 
         self._Q_losses = Q_losses
         self._Q_optimizers = tuple(
@@ -429,10 +397,7 @@ class SAC(RLAlgorithm):
         self._policy_domain_loss = 0.0
 
         self._policy_losses = policy_kl_losses
-        if self._train_policy_on_all_data:
-            policy_loss = tf.reduce_mean(policy_kl_losses)
-        else:
-            policy_loss = tf.reduce_mean(policy_kl_losses[:256])
+        policy_loss = tf.reduce_mean(policy_kl_losses)
 
         self._policy_optimizer = tf.train.AdamOptimizer(
             learning_rate=self._policy_lr,

@@ -260,25 +260,6 @@ def get_parser(allow_policy_list=False):
         )
 
     parser.add_argument(
-        "--auxiliary_loss",
-        dest="auxiliary_loss",
-        action="store_true",
-        )
-
-    parser.add_argument(
-        "--auxiliary_loss_weight",
-        type=float,
-        default=0.01,
-        help="weight for auxiliary loss"
-        )
-
-    parser.add_argument(
-        "--no_policy_training_action_free",
-        dest="train_policy_on_all_data",
-        action="store_false",
-        )
-
-    parser.add_argument(
         "--preprocessor_for_inverse",
         dest="preprocessor_for_inverse",
         action="store_true",

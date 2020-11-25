@@ -199,8 +199,6 @@ def get_variant_spec(args):
         variant_spec['algorithm_params']['kwargs']['replace_rewards_bottom'] = args.replace_rewards_bottom
         variant_spec['algorithm_params']['kwargs']['use_ground_truth_actions'] = args.use_ground_truth_actions
         variant_spec['algorithm_params']['kwargs']['use_zero_actions'] = args.use_zero_actions
-        variant_spec['algorithm_params']['kwargs']['auxiliary_loss'] = args.auxiliary_loss
-        variant_spec['algorithm_params']['kwargs']['auxiliary_loss_weight'] = args.auxiliary_loss_weight
         variant_spec['algorithm_params']['kwargs']['paired_loss_scale'] = args.paired_loss_scale
         if args.algorithm in ('RLV'):
             variant_spec['inverse_model'] = {
@@ -210,7 +208,6 @@ def get_variant_spec(args):
                 'conv_strides': [2] * 5,
                 'inverse_domain_shift': args.inverse_domain_shift,
             }
-            variant_spec['algorithm_params']['kwargs']['train_policy_on_all_data'] = args.train_policy_on_all_data
             variant_spec['algorithm_params']['kwargs']['preprocessor_for_inverse'] = args.preprocessor_for_inverse
             variant_spec['algorithm_params']['kwargs']['inverse_domain_shift'] = args.inverse_domain_shift
             variant_spec['algorithm_params']['kwargs']['inv_model_ds_generator_weight'] = args.inv_model_ds_generator_weight
@@ -229,7 +226,6 @@ def get_variant_spec(args):
     variant_spec['algorithm_params']['kwargs']['n_train_repeat'] = args.n_train_repeat
 
     variant_spec['policy_params']['kwargs']['domain_shift'] = args.domain_shift
-    variant_spec['Q_params']['kwargs']['auxiliary_loss'] = args.auxiliary_loss
     variant_spec['Q_params']['kwargs']['domain_shift'] = args.domain_shift
     print("domain shift:", args.domain_shift)
 

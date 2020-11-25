@@ -365,8 +365,6 @@ class RLV(SAC):
                 ('policy_domain_shift_loss', self._policy_domain_loss),
             ))
 
-        if self._auxiliary_loss:
-            diagnosables['auxiliary_prediction_loss'] = self._auxiliary_pred_error
         if self._inverse_domain_shift:
             diagnosables['inverse_model_domain_shift_discriminator'] = self._inverse_model_ds_discriminator_loss
             diagnosables['inverse_model_domain_shift_generator'] = self._inverse_model_ds_generator_loss
