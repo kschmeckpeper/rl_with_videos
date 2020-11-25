@@ -241,18 +241,6 @@ def get_parser(allow_policy_list=False):
         action="store_true",
         )
 
-    parser.add_argument(
-        "--preprocessor_for_inverse",
-        dest="preprocessor_for_inverse",
-        action="store_true",
-        )
-
-    parser.add_argument(
-        "--shared_preprocessor",
-        dest="shared_preprocessor",
-        action="store_true",
-        )
-
 
     parser.add_argument(
         "--domain_shift",

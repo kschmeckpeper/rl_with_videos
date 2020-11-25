@@ -208,7 +208,7 @@ def get_variant_spec(args):
                 'conv_strides': [2] * 5,
                 'domain_shift': args.domain_shift,
             }
-            variant_spec['algorithm_params']['kwargs']['preprocessor_for_inverse'] = args.preprocessor_for_inverse
+            variant_spec['algorithm_params']['kwargs']['preprocessor_for_inverse'] = args.domain_shift
             variant_spec['algorithm_params']['kwargs']['domain_shift'] = args.domain_shift
             variant_spec['algorithm_params']['kwargs']['domain_shift_generator_weight'] = args.domain_shift_generator_weight
             variant_spec['algorithm_params']['kwargs']['domain_shift_discriminator_weight'] = args.domain_shift_discriminator_weight
@@ -238,7 +238,7 @@ def get_variant_spec(args):
                 'dense_hidden_layer_sizes': (),
             },
         }
-        if args.preprocessor_for_inverse:
+        if args.domain_shift:
             preprocessor_params['kwargs']['conv_filters'] = [16, 16, 32] #variant_spec['inverse_model']['conv_filters']
             preprocessor_params['kwargs']['pool_strides'] = [2]*3#variant_spec['inverse_model']['conv_strides']
             preprocessor_params['kwargs']['conv_kernel_sizes'] = [5]*3#variant_spec['inverse_model']['conv_kernel_sizes']
@@ -256,7 +256,7 @@ def get_variant_spec(args):
         variant_spec['replay_pool_params']['kwargs']['max_size'] = min(1000000, int(n_epochs*1000))
 
 
-        variant_spec['shared_preprocessor'] = {'use': args.shared_preprocessor,
+        variant_spec['shared_preprocessor'] = {'use': args.domain_shift,
                                                'preprocessor_params': preprocessor_params.copy()
                                                }
         
