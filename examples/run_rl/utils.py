@@ -230,24 +230,6 @@ def get_parser(allow_policy_list=False):
         help="maximum distance to translate")
 
     parser.add_argument(
-        '--domain_shift',
-        type=bool,
-        default=False,
-        help="If domain shift should be applied")
-
-    parser.add_argument(
-        "--domain_shift_weight",
-        type=float,
-        default=-0.01,
-        help="Weight for domain shift terms")
-
-    parser.add_argument(
-        "--domain_shift_weight_q",
-        type=float,
-        default=0.01,
-        help="Weight for domain shift terms")
-
-    parser.add_argument(
         "--use_ground_truth_actions",
         dest="use_ground_truth_actions",
         action="store_true",

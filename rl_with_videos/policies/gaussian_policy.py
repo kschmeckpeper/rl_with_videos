@@ -22,7 +22,6 @@ class GaussianPolicy(LatentSpacePolicy):
                  squash=True,
                  preprocessor=None,
                  name=None,
-                 domain_shift=False,
                  *args,
                  **kwargs):
         self._Serializable__initialize(locals())
@@ -32,7 +31,6 @@ class GaussianPolicy(LatentSpacePolicy):
         self._squash = squash
         self._name = name
         self._preprocessor = preprocessor
-        self._domain_shift = domain_shift
 
         super(GaussianPolicy, self).__init__(*args, **kwargs)
 
@@ -106,11 +104,6 @@ class GaussianPolicy(LatentSpacePolicy):
         self.actions_model = tf.keras.Model(self.condition_inputs, actions)
 
 
-        if self._domain_shift:
-            self.domain_shift_model = feedforward_model(input_shapes=[(conditions.shape[1],)],
-                                                        output_size=1,
-                                                        hidden_layer_sizes=[64, 64, 64])
-
         actions_for_fixed_latents = tf.keras.layers.Lambda(
             lambda raw_actions: squash_bijector.forward(raw_actions)
         )(raw_actions_for_fixed_latents)
@@ -179,22 +172,11 @@ class GaussianPolicy(LatentSpacePolicy):
         return list(set(super(GaussianPolicy, self).non_trainable_weights))
 
     def actions(self, conditions):
-        if self._domain_shift:
-            print("getting actions:", conditions, self._domain_shift)
-            preprocessed = self._preprocessor(conditions)
-            print("gradient reversa;", gradient_reversal)
-            print("preprocessed:", preprocessed)
-            preprocessed = gradient_reversal(preprocessed)
-            domain_shift = self.domain_shift_model(preprocessed)
-            print("Preprocessed:", preprocessed)
-        else:
-            domain_shift = None
-
         if self._deterministic:
             print("deterministic")
-            return self.deterministic_actions_model(conditions),  domain_shift
+            return self.deterministic_actions_model(conditions)
 
-        return self.actions_model(conditions), domain_shift
+        return self.actions_model(conditions)
 
     def log_pis(self, conditions, actions):
         assert not self._deterministic, self._deterministic

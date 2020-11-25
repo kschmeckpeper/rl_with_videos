@@ -43,9 +43,6 @@ class SAC(RLAlgorithm):
             action_prior='uniform',
             reparameterize=False,
             store_extra_policy_info=False,
-            domain_shift=False,
-            domain_shift_weight=-0.01,
-            domain_shift_weight_q=-0.01,
 
             should_augment=False,
             trans_dist=4,
@@ -81,9 +78,7 @@ class SAC(RLAlgorithm):
         self._evaluation_environment = evaluation_environment
         self._policy = policy
 
-        self._Qs = [q for q, _ in Qs]
-        self._q_domain_models = [d for _, d in Qs]
-        print("q domain models:", self._q_domain_models)
+        self._Qs = [q for q in Qs]
         self._Q_targets = tuple(tf.keras.models.clone_model(Q) for Q in self._Qs)
 
 
@@ -109,11 +104,6 @@ class SAC(RLAlgorithm):
         self._store_extra_policy_info = store_extra_policy_info
 
         self._save_full_state = save_full_state
-
-        self._domain_shift = domain_shift
-        self._domain_shift_weight = domain_shift_weight
-        self._domain_shift_weight_q = domain_shift_weight_q
-        self._domain_shift_weight_q_d = -domain_shift_weight_q
 
         self._should_augment = should_augment
         self._trans_dist = trans_dist
@@ -194,20 +184,13 @@ class SAC(RLAlgorithm):
                 name='raw_actions',
             )
 
-        if self._domain_shift:
-            self._domains_ph = tf.placeholder(
-                tf.float32,
-                shape=(None, 1),
-                name='domains',
-            )
-
     def _init_augmentation(self):
         self._observations_ph = self._augment_image(self._observations_no_aug_ph)
         self._next_observations_ph = self._augment_image(self._next_observations_no_aug_ph)
 
 
     def _get_Q_target(self):
-        next_actions, _ = self._policy.actions([self._next_observations_ph])
+        next_actions = self._policy.actions([self._next_observations_ph])
         next_log_pis = self._policy.log_pis(
             [self._next_observations_ph], next_actions)
 
@@ -244,66 +227,10 @@ class SAC(RLAlgorithm):
             for Q in self._Qs)
 
 
-        print("q target:", Q_target)
-        print("q values:", Q_values)
         Q_losses  = tuple(
             tf.losses.mean_squared_error(
                 labels=Q_target, predictions=Q_value, weights=0.5)
             for Q_value in Q_values)
-
-        if self._domain_shift:
-            pred_domains = [d([self._observations_ph]) for d in self._q_domain_models]
-            pred_domains[0] = tf.Print(pred_domains[0], [tf.reduce_sum(self._domains_ph[:256])], "gt domains first half")
-            pred_domains[0] = tf.Print(pred_domains[0], [tf.reduce_sum(self._domains_ph[256:])], "gt domains second half")
-            for i in range(len(pred_domains)):
-                pred_domains[i] = tf.Print(pred_domains[i], [tf.reduce_sum(pred_domains[i][:256])], "pred_domains {} first half".format(i))
-                pred_domains[i] = tf.Print(pred_domains[i], [tf.reduce_sum(pred_domains[i][256:])], "pred_domains {} second half".format(i))
-#            pred_domains[0] = tf.Print(pred_domains[0], [tf.reduce_sum(pred_domains[0][:256] < 0.5)], "first half less than 0.5")
-#            pred_domains[0] = tf.Print(pred_domains[0], [tf.reduce_sum(self._domains_ph[:256] < 0.5)], "gt first half less than 0.5")
-#            pred_domains[0] = tf.Print(pred_domains[0], [tf.reduce_sum(pred_domains[0][256:] < 0.5)], "second half less than 0.5")
-#            pred_domains[0] = tf.Print(pred_domains[0], [tf.reduce_sum(self._domains_ph[256:] < 0.5)], "gt second half less than 0.5")
-#            pred_domains[0] = tf.Print(pred_domains[0], [(tf.reduce_sum(tf.cast(self._domains_ph[:256] < 0.5, tf.float32)) + tf.reduce_sum(tf.cast(self._domains_ph[256:] >= 0.5, tf.float32))) / 512], "score for gt")
-            self._q_domain_scores = tuple((tf.reduce_sum(tf.cast(pd[:256] < 0.5, tf.float32)) + tf.reduce_sum(tf.cast(pd[256:] >= 0.5, tf.float32))) / 512 for pd in pred_domains)
-#            for i in range(len(pred_domains)):
-#                pred_domains[0] = tf.Print(pred_domains[0], [self._q_domain_scores[i]], "domain_score {}".format(i))
-            pred_domains = tuple(pred_domains)
-#            domain_losses = [-tf.losses.sigmoid_cross_entropy(self._domains_ph, d) for d in pred_domains]
-            domain_losses = [tf.keras.losses.BinaryCrossentropy()(self._domains_ph, d) for d in pred_domains]
-            for i in range(len(domain_losses)):
-                domain_losses[i] = tf.Print(domain_losses[i], [domain_losses[i]], "domain_losses {}".format(i))
-            domain_losses = tuple(domain_losses)
-            self._q_domain_losses = [d_loss * self._domain_shift_weight_q  for d_loss in domain_losses]
-            self._q_domain_discrim_losses = [d_loss * self._domain_shift_weight_q_d for d_loss in domain_losses]
-            for i in range(len(domain_losses)):
-                self._q_domain_losses[i] = tf.Print(self._q_domain_losses[i], [self._q_domain_losses[i]], "q domain losses" + str(i))
-                self._q_domain_discrim_losses[i] = tf.Print(self._q_domain_discrim_losses[i], [self._q_domain_discrim_losses[i]], "q_domain_discrim" + str(i))
-                self._q_domain_discrim_losses[i] = tf.Print(self._q_domain_discrim_losses[i], [self._q_domain_scores[i]], "q domain scores" + str(i))
-
-
-            self._q_domain_losses = tuple(self._q_domain_losses)
-            self._q_domain_discrim_losses = tuple(self._q_domain_discrim_losses)
-
-            self._q_raw_domain_losses = domain_losses
-            print("q domain losses:", domain_losses)
-            Q_losses = tuple(q + domain for q, domain in zip(Q_losses, self._q_domain_losses))
-#            Q_losses = tuple( domain for q, domain in zip(Q_losses, self._q_domain_losses))
-            print("q_losses:", Q_losses)
-            for n in self._q_domain_models:
-                print("name:", n._name)
-
-            self._q_discrim_optims = tuple(
-                tf.train.AdamOptimizer(learning_rate=self._q_discrim_lr,
-                    name="{}_{}_optimizer".format(qd._name, i))
-                for i, qd in enumerate(self._q_domain_models))
-            for qd in self._q_domain_models:
-                print("q_discrim trainable:", qd.trainable_variables[4:])
-            q_discrim_training_ops = tuple(
-                qd_optimizer.minimize(loss=qd_loss, var_list=qd.trainable_variables[4:])
-                for i, (qd, qd_loss, qd_optimizer)
-                in enumerate(zip(self._q_domain_models, self._q_domain_discrim_losses, self._q_discrim_optims)))
-
-            self._training_ops.update({'Q_d': tf.group(q_discrim_training_ops)})
-
 
         self._Q_losses = Q_losses
         self._Q_optimizers = tuple(
@@ -329,9 +256,7 @@ class SAC(RLAlgorithm):
         See Section 4.2 in [1], for further information of the policy update,
         and Section 5 in [1] for further information of the entropy update.
         """
-        print("domain shift?", self._domain_shift)
-        print("observations:", self._observations_ph)
-        actions, pred_domains = self._policy.actions([self._observations_ph])
+        actions = self._policy.actions([self._observations_ph])
         log_pis = self._policy.log_pis([self._observations_ph], actions)
 
 #        assert log_pis.shape.as_list() == [None, 1]
@@ -382,20 +307,6 @@ class SAC(RLAlgorithm):
 
 #        assert policy_kl_losses.shape.as_list() == [None, 1]
 
-#        if self._domain_shift:
-#            pred_domains = tf.math.sigmoid(pred_domains)
-##            pred_domains = tf.Print(pred_domains, [tf.math.reduce_sum(self._domains_ph[:256])], "domains ph first half", summarize=512)
-##            pred_domains = tf.Print(pred_domains, [tf.math.reduce_sum(self._domains_ph[256:])], "domains ph second half", summarize=512)
-##            pred_domains = tf.Print(pred_domains, [pred_domains], "pred_domains_policy", summarize=512)
-##            pred_domains = tf.Print(pred_domains, [tf.math.reduce_sum(pred_domains[:256])], "first half sum:")
-##            pred_domains = tf.Print(pred_domains, [tf.math.reduce_sum(pred_domains[256:])], "second half sum")
-#            domain_loss = - tf.losses.sigmoid_cross_entropy(self._domains_ph, pred_domains)
-#            self._policy_domain_loss = domain_loss
-#            print("policy domain loss:", domain_loss)
-#            policy_kl_losses = policy_kl_losses + domain_loss * self._domain_shift_weight
-#            print("combined policy loss:", policy_kl_losses)
-        self._policy_domain_loss = 0.0
-
         self._policy_losses = policy_kl_losses
         policy_loss = tf.reduce_mean(policy_kl_losses)
 
@@ -416,10 +327,6 @@ class SAC(RLAlgorithm):
             ('policy_loss', self._policy_losses),
             ('alpha', self._alpha)
         ))
-
-        if self._domain_shift:
-            diagnosables.update(('Q_domain_shift_losses', self._q_domain_losses))
-            diagnosables.update(('policy_domain_shift_loss', self._policy_domain_loss))
 
         diagnostic_metrics = OrderedDict((
             ('mean', tf.reduce_mean),
@@ -481,9 +388,6 @@ class SAC(RLAlgorithm):
             self._rewards_ph: batch['rewards'],
             self._terminals_ph: batch['terminals'],
         }
-
-        if self._domain_shift:
-            feed_dict[self._domains_ph] = np.zeros(batch['terminals'].shape)
 
         if self._store_extra_policy_info:
             feed_dict[self._log_pis_ph] = batch['log_pis']

@@ -19,13 +19,7 @@ def get_model_from_variant(variant, env, *args, **kwargs):
     pass
 
 def get_inverse_model_from_variant(variant, env):
-    print("observation space:", env.observation_space)
-    print("shape:", env.observation_space.shape)
-    print("action space:", env.action_space)
-    print("shape:", env.action_space.shape)
-    print("variant inverse model:", variant['inverse_model'])
     inverse_model_params = deepcopy(variant['inverse_model'])
-    print("inverse model params:", inverse_model_params)
 
     if "Image" in variant['task'] and 'preprocessor_params' not in inverse_model_params:
         inverse_model_params.pop('hidden_layer_sizes')

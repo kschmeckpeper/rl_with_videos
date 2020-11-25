@@ -148,7 +148,7 @@ class RLV(SAC):
                                            name="obs_of_interaction_no_aug")
                 }
 
-        if self._domain_shift or self._inverse_domain_shift:
+        if self._inverse_domain_shift:
             self._domains_ph = tf.placeholder(tf.float32, shape=(None, 1), name='domains')
 
 
@@ -181,7 +181,7 @@ class RLV(SAC):
         if iteration is not None:
             feed_dict[self._placeholders['action_conditioned']['iteration']] = iteration
 
-        if self._domain_shift or self._inverse_domain_shift:
+        if self._inverse_domain_shift:
             feed_dict[self._domains_ph] = np.concatenate([np.zeros(batch['action_conditioned']['terminals'].shape),
                                                   np.ones(batch['action_free']['terminals'].shape)])
 
@@ -343,27 +343,13 @@ class RLV(SAC):
         self._iteration_ph = self._placeholders['action_conditioned']['iteration']
 
     def _init_diagnostics_ops(self): 
-        if not self._domain_shift:
-            diagnosables = OrderedDict(( 
-                ('Q_value', self._Q_values), 
-                ('Q_loss', self._Q_losses), 
-                ('policy_loss', self._policy_losses), 
-                ('alpha', self._alpha),
-                ('inverse_model_loss', self._inverse_model_loss),
-            )) 
-        else:
-            diagnosables = OrderedDict((
-                ('Q_value', self._Q_values),
-                ('Q_loss', self._Q_losses),
-                ('policy_loss', self._policy_losses),
-                ('alpha', self._alpha),
-                ('inverse_model_loss', self._inverse_model_loss),
-                ('Q_domain_shift_losses', self._q_domain_losses),
-                ('Q_raw_domain_shift_losses', self._q_raw_domain_losses),
-                ('Q_discrim_domain_shift_losses', self._q_domain_discrim_losses),
-                ('Q_domain_scores', self._q_domain_scores),
-                ('policy_domain_shift_loss', self._policy_domain_loss),
-            ))
+        diagnosables = OrderedDict(( 
+            ('Q_value', self._Q_values), 
+            ('Q_loss', self._Q_losses), 
+            ('policy_loss', self._policy_losses), 
+            ('alpha', self._alpha),
+            ('inverse_model_loss', self._inverse_model_loss),
+        )) 
 
         if self._inverse_domain_shift:
             diagnosables['inverse_model_domain_shift_discriminator'] = self._inverse_model_ds_discriminator_loss

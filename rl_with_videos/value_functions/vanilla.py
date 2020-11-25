@@ -7,7 +7,6 @@ def create_feedforward_Q_function(observation_shape,
                                   action_shape,
                                   *args,
                                   observation_preprocessor=None,
-                                  domain_shift=False,
                                   name='feedforward_Q',
                                   **kwargs):
     input_shapes = (observation_shape, action_shape)
@@ -22,19 +21,7 @@ def create_feedforward_Q_function(observation_shape,
         name=name,
         **kwargs)
 
-    domain_shift_model = None
-    if domain_shift:
-
-        domain_shift_model =  feedforward_model(
-            (input_shapes[0],),
-            *args,
-            output_size=1,
-#            reverse_gradients=True,
-            preprocessors=(preprocessors[0],),
-            name=name + "_domain_shift",
-            output_activation='sigmoid',
-            **kwargs)
-    return q, domain_shift_model
+    return q
 
 def create_feedforward_V_function(observation_shape,
                                   *args,
