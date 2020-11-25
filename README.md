@@ -34,13 +34,14 @@ We wrap the Acrobot environment in the AcrobotContinuous environment, which take
 To run the SAC baseline, run the following commands.
 ```
 cd examples/run_rl
-python3 -u main.py --task=AcrobotContinuous-v1 --algorithm SAC --n_epochs 1000 --checkpoint-at-end True --checkpoint-replay-pool True --checkpoint-frequency 25 --exp-name EXP_NAME --gpus=1 --trial-gpus=1 --temp-dir=/PATH/TO/TMP/DIR
+python3 -u main.py --task=AcrobotContinuous-v1 --algorithm SAC --exp-name EXP_NAME --gpus=1 --trial-gpus=1
 ```
 
 
 To run RLV, first download a replay pool containing the desired observations.  You may also use a replay pool generated during the training of SAC.
 
 | Avg. Reward | Link |
+| :----- | :----- |
 | -99 | [here](https://drive.google.com/file/d/16Je5LcjTM_7VJ4oEjxNrAyoXhFdzHrwT/view?usp=sharing) |
 | -79 | [here](https://drive.google.com/file/d/16Je5LcjTM_7VJ4oEjxNrAyoXhFdzHrwT/view?usp=sharing) |
 | -63 | [here](https://drive.google.com/file/d/15pqxuLvD-PjkWsdZl2FRyekpOhC88LPE/view?usp=sharing) |
@@ -49,7 +50,7 @@ Then, run the following commands.
 
 ```
 cd examples/run_rl
-python3 -u main.py --task=AcrobotContinuous-v1 --algorithm RLV --n_epochs 1000 --checkpoint-at-end True --checkpoint-replay-pool True --checkpoint-frequency 100 --exp-name EXP_NAME --replace_rewards_bottom=-1.0 --replace_rewards_scale=10.0 --gpus=1 --trial-gpus=1 --replay_pool_load_path PATH/TO/REPLAY/POOL --temp-dir=PATH/TO/TMP/DIR
+python3 -u main.py --task=AcrobotContinuous-v1 --algorithm RLV --exp-name EXP_NAME --replace_rewards_bottom=-1.0 --replace_rewards_scale=10.0 --gpus=1 --trial-gpus=1 --replay_pool_load_path PATH/TO/REPLAY/POOL
 ```
 
 ## Pushing with Human Observations
@@ -58,7 +59,7 @@ To run the SAC baseline, run the following command.
 
 ```
 cd examples/run_rl
-python3 -u main.py --task=Image48HumanLikeSawyerPushForwardEnv-v0 --domain mujoco --algorithm SAC --n_epochs 1000 --checkpoint-at-end True --checkpoint-replay-pool True --checkpoint-frequency 100 --exp-name EXP_NAME --gpus=1 --trial-gpus=1  --video-save-frequency=50 --temp-dir=/PATH/TO/TMP/DIR
+python3 -u main.py --task=Image48HumanLikeSawyerPushForwardEnv-v0 --domain mujoco --algorithm SAC --exp-name EXP_NAME --gpus=1 --trial-gpus=1
 ```
 
 To run RLV, first download the human observations from [here](https://drive.google.com/file/d/1H8p3RsimZjZMhbpf1AP2xEOPWBBQgpIu/view?usp=sharing) and the human paired data from [here](https://drive.google.com/file/d/1qK2EoHMaOPAmACIxLbxI0C34gyH_UiWB/view?usp=sharing).
@@ -67,7 +68,7 @@ Run the following commands:
 
 ```
 cd examples/run_rl
-python3 -u main.py --task=Image48HumanLikeSawyerPushForwardEnv-v0 --domain mujoco --algorithm RLV --n_epochs 1000 --exp-name EXP_NAME --gpus=1 --trial-gpus=1 --replay_pool_load_path /home/karls/partially_action_conditioned_rl/softlearning-pac2/scripts/replay_pools/hand_july_21_26_keep_all_fixed.pkl --paired_data_path /home/karls/partially_action_conditioned_rl/softlearning-pac2/scripts/replay_pools/human_paired_oct_10.pkl --paired_loss_scale 1e-06 --preprocessor_for_inverse --shared_preprocessor --remove_rewards=True --replace_rewards_scale=10.0 --replace_rewards_bottom=0.0 --inverse_domain_shift --inv_model_ds_generator_weight 0.001 --inv_model_ds_discriminator_weight 1e-08 --temp-dir=/home/karls/partially_action_conditioned_rl/tmp 
+python3 -u main.py --task=Image48HumanLikeSawyerPushForwardEnv-v0 --domain mujoco --algorithm RLV  --exp-name EXP_NAME --gpus=1 --trial-gpus=1 --replay_pool_load_path /PATH/TO/REPLAY/POOL --paired_data_path /PATH/TO/PAIRED/DATA --paired_loss_scale 1e-06 --replace_rewards_scale=10.0 --replace_rewards_bottom=0.0 --domain_shift --domain_shift_generator_weight 0.001 --domain_shift_discriminator_weight 1e-08
 ```
 
 
@@ -77,7 +78,7 @@ To run the SAC baseline, run the following command.
 
 ```
 cd examples/run_rl
-python3 -u main.py --task=Image48MetaworldDrawerOpenSparse2D-v0 --domain Metaworld --algorithm SAC --num-samples 1 --n_epochs 1000 --exp-name EXP_NAME --gpus=1 --trial-gpus=1 --video-save-frequency=50 --temp-dir=/PATH/TO/TMP/DIR
+python3 -u main.py --task=Image48MetaworldDrawerOpenSparse2D-v0 --domain Metaworld --algorithm SAC  --exp-name EXP_NAME --gpus=1 --trial-gpus=1
 ```
 
 
@@ -86,7 +87,7 @@ Download the human observations from [here](https://drive.google.com/file/d/1LhJ
 Run the following commands:
 ```
 cd examples/run_rl
-python3 -u main.py --task=Image48MetaworldDrawerOpenSparse2D-v0 --domain Metaworld --algorithm PAC  --n_epochs 3000 --exp-name EXP_NAME --gpus=1 --trial-gpus=1 --replay_pool_load_path /home/karls/partially_action_conditioned_rl/softlearning-pac2/scripts/replay_pools/drawer_2d/drawer_kitchen_aug28_nov2.pkl --paired_data_path /home/karls/partially_action_conditioned_rl/softlearning-pac2/scripts/replay_pools/drawer_2d/kitchen_paired_frames.pkl --paired_loss_scale 1e-08 --preprocessor_for_inverse --shared_preprocessor --remove_rewards=True --replace_rewards_scale=10.0 --replace_rewards_bottom=0.0 --inverse_domain_shift --inv_model_ds_generator_weight 0.001 --inv_model_ds_discriminator_weight 1e-08 --video-save-frequency=50 --temp-dir=/home/karls/partially_action_conditioned_rl/tmp
+python3 -u main.py --task=Image48MetaworldDrawerOpenSparse2D-v0 --domain Metaworld --algorithm RLV --exp-name EXP_NAME --gpus=1 --trial-gpus=1 --replay_pool_load_path /PATH/TO/REPLAY/POOL --paired_data_path /PATH/TO/PAIRED/DATA --paired_loss_scale 1e-08 --replace_rewards_scale=10.0 --replace_rewards_bottom=0.0 --domain_shift --domain_shift_generator_weight 0.001 --domain_shift_discriminator_weight 1e-08
 ```
 
 

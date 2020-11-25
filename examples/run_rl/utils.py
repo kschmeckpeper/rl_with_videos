@@ -55,7 +55,7 @@ def add_ray_init_args(parser):
     parser.add_argument(
         '--temp-dir',
         type=str,
-        default=None,
+        default="temp",
         help=init_help_string("If provided, it will specify the root temporary"
                               " directory for the Ray process."))
 
@@ -123,7 +123,7 @@ def add_ray_tune_args(parser):
     parser.add_argument(
         '--checkpoint-frequency',
         type=int,
-        default=0,
+        default=100,
         help=tune_help_string(
             "How many training iterations between checkpoints."
             " A value of 0 (default) disables checkpointing. If set,"
@@ -132,7 +132,7 @@ def add_ray_tune_args(parser):
     parser.add_argument(
         '--checkpoint-at-end',
         type=lambda x: bool(strtobool(x)),
-        default=None,
+        default=True,
         help=tune_help_string(
             "Whether to checkpoint at the end of the experiment. If set,"
             " takes precedence over variant['run_params']"
@@ -179,12 +179,12 @@ def get_parser(allow_policy_list=False):
     parser.add_argument(
         '--n_goal_examples', type=int, default=10)
     parser.add_argument(
-        '--n_epochs', type=int, default=200)
+        '--n_epochs', type=int, default=1000)
 
     parser.add_argument(
         '--checkpoint-replay-pool',
         type=lambda x: bool(strtobool(x)),
-        default=None,
+        default=True,
         help=("Whether a checkpoint should also saved the replay"
               " pool. If set, takes precedence over"
               " variant['run_params']['checkpoint_replay_pool']."
@@ -200,10 +200,10 @@ def get_parser(allow_policy_list=False):
               " to generate the action-free replay pool"))
 
     parser.add_argument(
-        "--remove_rewards",
-        type=bool,
-        default=False,
-        help=("Remove the rewards from the action free demonstrations"))
+        "--use_ground_truth_rewards",
+        action='store_false',
+        dest='remove_rewards',
+        help=("Keep the ground truth rewards from the replay pool"))
 
     parser.add_argument(
         "--replace_rewards_scale",
