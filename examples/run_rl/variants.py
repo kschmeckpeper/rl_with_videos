@@ -226,7 +226,6 @@ def get_variant_spec(args):
     variant_spec['algorithm_params']['kwargs']['domain_shift'] = args.domain_shift
     variant_spec['algorithm_params']['kwargs']['domain_shift_weight'] = args.domain_shift_weight
     variant_spec['algorithm_params']['kwargs']['domain_shift_weight_q'] = args.domain_shift_weight_q
-    variant_spec['algorithm_params']['kwargs']['stop_overtraining'] = args.stop_overtraining
     variant_spec['algorithm_params']['kwargs']['n_train_repeat'] = args.n_train_repeat
 
     variant_spec['policy_params']['kwargs']['domain_shift'] = args.domain_shift

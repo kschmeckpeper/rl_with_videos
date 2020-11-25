@@ -303,14 +303,6 @@ class RLV(SAC):
 
             self._inverse_model_ds_score = tf.reduce_sum(tf.cast(tf.abs(pred_domains - self._domains_ph) <= 0.5, tf.float32)) / 512
 
-            if self._stop_overtraining:
-                generator_loss = tf.Print(generator_loss, [generator_loss], "generator_loss before")
-                discriminator_loss = tf.Print(discriminator_loss, [discriminator_loss], "discriminator_loss before")
-                generator_loss = generator_loss * tf.cast(self._inverse_model_ds_score > 0.55, tf.float32)
-                discriminator_loss = discriminator_loss * tf.cast(self._inverse_model_ds_score < 0.9, tf.float32)
-                generator_loss = tf.Print(generator_loss, [generator_loss], "generator_loss after")
-                generator_loss = tf.Print(generator_loss, [discriminator_loss], "discriminator_loss after")
-
             self._inverse_model_ds_generator_loss = generator_loss
             self._inverse_model_ds_discriminator_loss = discriminator_loss
 

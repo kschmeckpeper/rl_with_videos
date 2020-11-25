@@ -46,7 +46,6 @@ class SAC(RLAlgorithm):
             domain_shift=False,
             domain_shift_weight=-0.01,
             domain_shift_weight_q=-0.01,
-            stop_overtraining=False,
             train_policy_on_all_data=True,
             auxiliary_loss=False,
             auxiliary_loss_weight=0.01,
@@ -122,8 +121,6 @@ class SAC(RLAlgorithm):
         self._domain_shift_weight = domain_shift_weight
         self._domain_shift_weight_q = domain_shift_weight_q
         self._domain_shift_weight_q_d = -domain_shift_weight_q
-        self._stop_overtraining = stop_overtraining
-        print("domain shift weight", domain_shift_weight)
 
         self._auxiliary_loss = auxiliary_loss
         self._auxiliary_loss_weight = auxiliary_loss_weight
@@ -289,9 +286,6 @@ class SAC(RLAlgorithm):
             domain_losses = tuple(domain_losses)
             self._q_domain_losses = [d_loss * self._domain_shift_weight_q  for d_loss in domain_losses]
             self._q_domain_discrim_losses = [d_loss * self._domain_shift_weight_q_d for d_loss in domain_losses]
-            if self._stop_overtraining:
-                self._q_domain_losses = [d_loss * tf.cast(tf.stop_gradient(d_score) > 0.6, tf.float32) for (d_loss, d_score) in zip(self._q_domain_losses, self._q_domain_scores)]
-                self._q_domain_discrim_losses = [d_loss * tf.cast(tf.stop_gradient(d_score) < 0.9, tf.float32) for (d_loss, d_score) in zip(self._q_domain_discrim_losses, self._q_domain_scores)]
             for i in range(len(domain_losses)):
                 self._q_domain_losses[i] = tf.Print(self._q_domain_losses[i], [self._q_domain_losses[i]], "q domain losses" + str(i))
                 self._q_domain_discrim_losses[i] = tf.Print(self._q_domain_discrim_losses[i], [self._q_domain_discrim_losses[i]], "q_domain_discrim" + str(i))

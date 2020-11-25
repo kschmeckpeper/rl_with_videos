@@ -248,12 +248,6 @@ def get_parser(allow_policy_list=False):
         help="Weight for domain shift terms")
 
     parser.add_argument(
-        "--stop_overtraining",
-        dest="stop_overtraining",
-        action="store_true",
-        )
-
-    parser.add_argument(
         "--use_ground_truth_actions",
         dest="use_ground_truth_actions",
         action="store_true",
