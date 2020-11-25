@@ -60,13 +60,13 @@ lockfile==0.12.2
 lz4==3.0.2
 Markdown==3.0.1
 matplotlib==3.0.2
--e git+https://github.com/rlworkgroup/metaworld.git@b016e6a25e485f1ffa8ccbf52df54ac204a81f31#egg=metaworld
+-e git+https://github.com/kschmeckpeper/metaworld.git@1d0d2c4d965b64b97723cadfeb635744968593e5#egg=metaworld
 mock==4.0.2
 monotonic==1.5
 more-itertools==4.3.0
 mujoco-py==2.0.2.7
 multidict==4.7.5
--e git+https://github.com/kschmeckpeper/multiworld.git@50e9a52cdb06aa6aeefab1a0017af4ae580d5b8f#egg=multiworld
+-e git+https://github.com/kschmeckpeper/multiworld.git@d649b200620b020e03fff16459412d76e36cc5b1#egg=multiworld
 networkx==2.2
 numpy==1.19.0
 opencv-python

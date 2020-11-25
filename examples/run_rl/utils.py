@@ -14,9 +14,11 @@ AVAILABLE_ALGORITHMS = set(alg_utils.ALGORITHM_CLASSES.keys())
 
 import gym
 from multiworld.envs.mujoco import register_goal_example_envs
+from metaworld.envs.mujoco import register_rl_with_videos_custom_envs
 #import mj_envs.hand_manipulation_suite
 envs_before = set(env_spec.id for env_spec in gym.envs.registry.all())
 register_goal_example_envs()
+register_rl_with_videos_custom_envs()
 
 #from metaworld.envs.mujoco.sawyer_xyz import register_environments; register_environments()
 

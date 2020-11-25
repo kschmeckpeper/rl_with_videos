@@ -47,7 +47,8 @@ def get_goal_example_environment_from_variant(variant):
         else:
             from multiworld.envs.mujoco import register_goal_example_envs
             register_goal_example_envs()
-
+            from metaworld.envs.mujoco import register_rl_with_videos_custom_envs
+            register_rl_with_videos_custom_envs()
 #            import mj_envs.hand_manipulation_suite
 
     #        from metaworld.envs.mujoco.sawyer_xyz import register_environments; register_environments()
