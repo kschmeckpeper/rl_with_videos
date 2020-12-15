@@ -62,7 +62,7 @@ cd examples/run_rl
 python3 -u main.py --task=Image48HumanLikeSawyerPushForwardEnv-v0 --domain mujoco --algorithm SAC --exp-name EXP_NAME --gpus=1 --trial-gpus=1
 ```
 
-To run RLV, first download the human observations from [here](https://drive.google.com/file/d/1H8p3RsimZjZMhbpf1AP2xEOPWBBQgpIu/view?usp=sharing) and the human paired data from [here](https://drive.google.com/file/d/1qK2EoHMaOPAmACIxLbxI0C34gyH_UiWB/view?usp=sharing).
+To run RLV, first download the human observations from [here](https://drive.google.com/file/d/1osBobdYMwlqSEs5UA6UXzpiCPlbm1FNR/view?usp=sharing) and the human paired data from [here](https://drive.google.com/file/d/1qK2EoHMaOPAmACIxLbxI0C34gyH_UiWB/view?usp=sharing).
 
 Run the following commands:
 
