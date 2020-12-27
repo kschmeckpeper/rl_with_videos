@@ -307,12 +307,12 @@ class RLV(SAC):
 
 
             inverse_model_loss = inverse_model_loss + generator_loss * self._domain_shift_generator_weight
-            self._domain_shift_discriminator_loss = discriminator_loss * self._domain_shift_discriminator_weight
+            self._weighted_discriminator_loss = discriminator_loss * self._domain_shift_discriminator_weight
 
             self._domain_shift_discrim_optimizer = tf.compat.v1.train.AdamOptimizer(
                 learning_rate=self._domain_shift_discrim_lr,
                 name='domain_shift_discrim_optimizer')
-            domain_shift_discrim_train_op = self._domain_shift_discrim_optimizer.minimize(loss=self._domain_shift_discriminator_loss,
+            domain_shift_discrim_train_op = self._domain_shift_discrim_optimizer.minimize(loss=self._weighted_discriminator_loss,
                                                                                 var_list=self._domain_shift_model.trainable_variables)
             self._training_ops.update({'domain_shift_discriminator': domain_shift_discrim_train_op})
 
