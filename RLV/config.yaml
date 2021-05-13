@@ -1,0 +1,81 @@
+---
+name: "SLURM"   # MUST BE "SLURM", is used for communicating with the cluster scheduler
+
+# Required
+partition: "single"
+job-name: "i3rl"    # this will be the experiments name in slurm
+
+# Required - Cluster Specific. These defaults almost always work
+num_parallel_jobs: 99
+ntasks: 1
+cpus-per-task: 8
+mem-per-cpu: 8000
+time: 1440  # in minutes
+
+sbatch_args:    # Dictionary of SBATCH keywords and arguments
+  distribution: cyclic  # To have repetitions of the same exp be distributed to different CPU nodes
+
+slurm_log: "/home/kit/anthropomatik/cp8689/rl_with_videos/logs"
+# optional. dir in which slurm output and error logs will be saved.
+venv: "/home/kit/anthropomatik/your_username/.conda/envs/yourrlearning"
+# optional. path to your virtual environment activate-file
+
+
+---
+# DEFAULT parameters (Optional)
+name: "DEFAULT"   # MUST BE DEFAULT
+
+# Implementation default parameters
+path: "./experiments/clusterwork/"   # location to save results in
+repetitions: 1   # number of times one set of parameters is run
+
+reps_per_job: 1 # number of repetitions in each job. useful for paralellization. defaults to 1.
+reps_in_parallel: 1 # number of repetitions in each job that are executed in parallel. defaults to 1.
+
+
+params:
+  # this is where you specify all parameters needed for your experiment.
+  # the tree structure you define here will be translated to a nested python dictionary
+  A:
+    a1:
+      I: True
+      II: 42  # can be accessed by dict.get("A").get("a1").get("II")
+    a2: "Some String"
+  B:
+    b1: [1,2,3]
+    b2: False
+  C: 4.0e-5
+
+---
+name: "my_run"
+repetitions: 8   # repeat 8 times
+reps_per_job: 4 # split into 4 repetitions per job, i.e., 2 jobs w/ 4 repetitions each
+reps_in_parallel: 2 # number of repetitions in each job that are executed in parallel.
+
+params:  # this dictionary superseeds the default if both are specified
+  A:
+    a1:
+      I: False  # is "True" in the default. When calling "my_run", dict.get("A").get("a1").get("I")==False
+  # you do not need to specify everything. Missing values will be filled in with the defaults above
+  B:
+    b2: False  # you can use the same values as in the default. This may help you with organizing things
+  D:
+    d1: "You can also add new stuff"
+
+---
+name: "my_grid"
+repetitions: 1
+params:  # this dictionary superseeds the default if both are specified
+  A:
+    a1:
+      I: False  # is "True" in the default. When calling "my_run", dict.get("A").get("a1").get("I")==False
+  # you do not need to specify everything. Missing values will be filled in with the defaults above
+
+grid:  # makes a grid over all parameters specified here
+  A:
+    a1:
+      II: [1.618, 3.1415, "Some String"]
+  D:
+    d1: ["new stuff 1", "new stuff 2"]
+# calling this will call 6 different runs corresponding to every combination of A.a1.II and D.d1. This allows for easy
+# grid search. It can be combined with more repetitions.

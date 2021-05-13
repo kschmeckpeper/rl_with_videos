@@ -1,6 +1,10 @@
-from RLV.torch_rlv.environments.utils import get_environment
-from RLV.torch_rlv.algorithms.utils import init_algorithm
-from RLV.torch_rlv.algorithms.sac.sac_agent import Agent
+from ..environments.utils import get_environment
+from ..algorithms.utils import init_algorithm
+from ..algorithms.sac.sac_agent import Agent
+
+# class
+# argument discrete, continous
+# getAgen
 
 
 def run_experiment(env_name, algo_name, n_actions, pre_steps, layer1_size, layer2_size, lr):
@@ -10,3 +14,5 @@ def run_experiment(env_name, algo_name, n_actions, pre_steps, layer1_size, layer
     algorithm = init_algorithm(algo_name, agent, env, env_name, n_actions=n_actions, pre_steps=pre_steps)
 
     algorithm.run()
+
+

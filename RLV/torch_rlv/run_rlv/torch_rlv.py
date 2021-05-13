@@ -5,5 +5,5 @@ def main():
     run_experiment("acrobot", "sac", 2500, 1000, 256, 256, 0.0003)
 
 
-if __name__ == "main":
+if __name__ == "__main__":
     main()
