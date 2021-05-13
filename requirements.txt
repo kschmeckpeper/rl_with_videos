@@ -6,7 +6,7 @@ async-timeout==3.0.1
 atari-py==0.2.6
 atomicwrites==1.2.1
 attrs==18.2.0
-awscli==1.16.140
+#awscli==1.16.140
 backcall==0.1.0
 boto==2.49.0
 boto3==1.9.130
@@ -41,7 +41,7 @@ google-auth-httplib2==0.0.3
 google-compute-engine==2.8.13
 grpcio==1.16.1
 gtimer==1.0.0b5
-gym==0.12.1
+gym==0.15.4
 h5py==2.8.0
 httplib2==0.12.0
 idna==2.7
@@ -100,11 +100,11 @@ python-dateutil==2.7.5
 pytz==2018.7
 PyWavelets==1.0.1
 PyYAML==5.1
-ray==0.6.6
+ray==1.2.0
 redis==3.0.1
 requests==2.20.1
 rsa==3.4.2
-ruamel.yaml==0.15.46
+ruamel.yaml==0.17.4
 s3transfer==0.2.0
 scikit-image==0.14.2
 scikit-learn==0.20.1
@@ -115,7 +115,7 @@ six==1.11.0
 smmap2==2.0.5
 tensorboard==1.13.1
 tensorflow-estimator==1.13.0
-tensorflow-gpu==1.13.1
+tensorflow-gpu==2.2.0
 tensorflow-probability==0.6.0
 termcolor==1.1.0
 toolz==0.9.0
