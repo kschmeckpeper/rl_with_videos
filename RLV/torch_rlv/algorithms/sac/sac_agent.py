@@ -4,6 +4,14 @@ from RLV.torch_rlv.buffer.replay_buffer import ReplayBuffer
 from RLV.torch_rlv.models.sac_networks import ActorNetwork, CriticNetwork, ValueNetwork
 
 
+def get_agent(env, experiment):
+    print(env.action_space)
+
+    return Agent(alpha=experiment.lr, beta=experiment.lr, input_dims=env.observation_space.shape, env=env,
+                 n_actions=experiment.n_actions, layer1_size=experiment.layer1_size,
+                 layer2_size=experiment.layer2_size)
+
+
 class Agent:
     def __init__(self, alpha=0.0003, beta=0.0003, input_dims=None,
                  env=None, gamma=0.99, n_actions=2, max_size=1000000, tau=0.005,
