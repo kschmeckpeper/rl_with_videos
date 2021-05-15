@@ -20,7 +20,7 @@ class Experiment:
 
     def run_experiment(self):
         env = get_environment(self.env_name)
-        agent = get_agent(env, self)
+        agent = get_agent(env, self.action_space_type,  self)
         algorithm = init_algorithm(self.algo_name, agent, env, self.env_name, n_actions=self.n_actions,
                                    pre_steps=self.pre_steps)
 
