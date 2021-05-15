@@ -186,7 +186,7 @@ class ActorNetworkDiscrete(nn.Module):
         z = z.float() * 1e-8
         log_action_probabilities = T.log(action_probs + z)
 
-        return action, log_action_probabilities
+        return action, log_action_probabilities, action_probs
 
     def save_checkpoint(self):
         T.save(self.state_dict(), self.checkpoint_file)

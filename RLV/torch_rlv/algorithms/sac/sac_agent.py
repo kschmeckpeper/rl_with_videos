@@ -221,21 +221,21 @@ class AgentDiscrete:
         value_ = self.target_value(state_).view(-1)
         value_[done] = 0.0
 
-        actions, log_probs = self.actor.sample(state)
-        log_probs = log_probs.view(-1)
+        actions, log_action_probs, action_probs = self.actor.sample(state)
+        log_action_probs = log_action_probs.view(-1)
         q1_new_policy = self.critic_1.forward(state, actions)
         q2_new_policy = self.critic_2.forward(state, actions)
         critic_value = T.min(q1_new_policy, q2_new_policy)
         critic_value = critic_value.view(-1)
 
         self.value.optimizer.zero_grad()
-        value_target = critic_value - log_probs
+        value_target = action_probs * (critic_value - log_action_probs)
         value_loss = 0.5 * F.mse_loss(value, value_target)
         value_loss.backward(retain_graph=True)
         self.value.optimizer.step()
 
-        actor_loss = log_probs - critic_value
-        actor_loss = T.mean(actor_loss)
+        actor_loss = log_action_probs - critic_value
+        actor_loss = T.mean(action_probs * actor_loss)
         self.actor.optimizer.zero_grad()
         actor_loss.backward(retain_graph=True)
         self.actor.optimizer.step()
