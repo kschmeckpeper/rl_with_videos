@@ -112,7 +112,7 @@ venv.bak/
 *.mp4
 data/
 vis/
-RLV/torch_rlv/models/tmp/
+RLV/torch_rlv/run_rlv/tmp/
 vendor/*
 .pkl
 

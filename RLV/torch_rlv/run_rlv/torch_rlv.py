@@ -11,7 +11,7 @@ run_torch_rlv({
     'env_name': 'acrobot',
     'algo_name': 'sac',
     'n_actions': 250,
-    'pre_steps': 0,
+    'pre_steps': 1000,
     'layer1_size': 256,
     'layer2_size': 256,
     'lr': 0.003

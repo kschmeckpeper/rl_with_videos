@@ -148,7 +148,7 @@ class ActorNetwork(nn.Module):
 
 class ActorNetworkDiscrete(nn.Module):
     def __init__(self, alpha, input_dims, max_action, fc1_dims=256,
-                 fc2_dims=256, n_actions=2, name='actor_discr', chkpt_dir='/tmp/sac'):
+                 fc2_dims=256, n_actions=2, name='actor_discr', chkpt_dir='tmp/sac'):
         super(ActorNetworkDiscrete, self).__init__()
         self.input_dims = input_dims
         self.fc1_dims = fc1_dims

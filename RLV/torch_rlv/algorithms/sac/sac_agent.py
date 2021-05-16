@@ -5,7 +5,6 @@ from RLV.torch_rlv.models.sac_networks import ActorNetwork,ActorNetworkDiscrete,
 
 
 def get_agent(env, action_space_type, experiment):
-    print(env.action_space)
     if action_space_type == "continuous":
         return Agent(alpha=experiment.lr, beta=experiment.lr, input_dims=env.observation_space.shape, env=env,
                      n_actions=env.action_space.shape[0], layer1_size=experiment.layer1_size,
@@ -191,6 +190,8 @@ class AgentDiscrete:
         self.target_value.load_state_dict(value_state_dict)
 
     def save_models(self):
+        import os
+        print(os.getcwd())
         print('.... saving models ....')
         self.actor.save_checkpoint()
         self.value.save_checkpoint()
@@ -223,13 +224,14 @@ class AgentDiscrete:
 
         actions, log_action_probs, action_probs = self.actor.sample(state)
         log_action_probs = log_action_probs.view(-1)
+        action_probs = action_probs.view(-1)
         q1_new_policy = self.critic_1.forward(state, actions)
         q2_new_policy = self.critic_2.forward(state, actions)
         critic_value = T.min(q1_new_policy, q2_new_policy)
         critic_value = critic_value.view(-1)
 
         self.value.optimizer.zero_grad()
-        value_target = (critic_value - log_action_probs)  # action_probs *
+        value_target = action_probs * (critic_value - log_action_probs)
         value_loss = 0.5 * F.mse_loss(value, value_target)
         value_loss.backward(retain_graph=True)
         self.value.optimizer.step()
