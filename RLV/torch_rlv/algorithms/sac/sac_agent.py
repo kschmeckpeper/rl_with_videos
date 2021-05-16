@@ -13,7 +13,7 @@ def get_agent(env, action_space_type, experiment):
 
     elif action_space_type == "discrete":
         return AgentDiscrete(alpha=experiment.lr, beta=experiment.lr, input_dims=env.observation_space.shape, env=env,
-                             n_actions=env.action_space.n, layer1_size=experiment.layer1_size,
+                             n_actions=1, layer1_size=experiment.layer1_size,
                              layer2_size=experiment.layer2_size)
 
 
@@ -153,7 +153,7 @@ class AgentDiscrete:
         self.n_actions = n_actions
 
         self.actor = ActorNetworkDiscrete(alpha, input_dims, n_actions=n_actions, fc1_dims=layer1_size, fc2_dims=layer2_size,
-                                  name='actor', max_action=env.action_space.n)
+                                  name='actor_discr', max_action=env.action_space.n)
         self.critic_1 = CriticNetwork(beta, input_dims, n_actions=n_actions, fc1_dims=layer1_size, fc2_dims=layer2_size,
                                       name='critic_1')
         self.critic_2 = CriticNetwork(beta, input_dims, n_actions=n_actions, fc1_dims=layer1_size, fc2_dims=layer2_size,
@@ -229,7 +229,7 @@ class AgentDiscrete:
         critic_value = critic_value.view(-1)
 
         self.value.optimizer.zero_grad()
-        value_target = action_probs * (critic_value - log_action_probs)
+        value_target = (critic_value - log_action_probs)  # action_probs *
         value_loss = 0.5 * F.mse_loss(value, value_target)
         value_loss.backward(retain_graph=True)
         self.value.optimizer.step()
@@ -243,8 +243,8 @@ class AgentDiscrete:
         self.critic_1.optimizer.zero_grad()
         self.critic_2.optimizer.zero_grad()
         q_hat = self.scale * reward + self.gamma * value_
-        q1_old_policy = self.critic_1.forward(state, action).view(-1)
-        q2_old_policy = self.critic_2.forward(state, action).view(-1)
+        q1_old_policy = self.critic_1.forward(state, action.view(-1)).view(-1)
+        q2_old_policy = self.critic_2.forward(state, action.view(-1)).view(-1)
         critic_1_loss = 0.5 * F.mse_loss(q1_old_policy, q_hat)
         critic_2_loss = 0.5 * F.mse_loss(q2_old_policy, q_hat)
 

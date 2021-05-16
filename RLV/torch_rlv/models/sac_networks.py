@@ -148,7 +148,7 @@ class ActorNetwork(nn.Module):
 
 class ActorNetworkDiscrete(nn.Module):
     def __init__(self, alpha, input_dims, max_action, fc1_dims=256,
-                 fc2_dims=256, n_actions=2, name='actor_discr', chkpt_dir='tmp/sac'):
+                 fc2_dims=256, n_actions=2, name='actor_discr', chkpt_dir='/tmp/sac'):
         super(ActorNetworkDiscrete, self).__init__()
         self.input_dims = input_dims
         self.fc1_dims = fc1_dims
@@ -189,8 +189,10 @@ class ActorNetworkDiscrete(nn.Module):
         z = action_probs == 0.0
         z = z.float() * 1e-8
         log_action_probabilities = T.log(action_probs + z)
+        log_action_probabilities = log_action_probabilities.sum(1, keepdim=True)
+        action_probs = action_probs.sum(1, keepdim=True)
 
-        return action, log_action_probabilities.view(-1), action_probs.view(-1)
+        return action, log_action_probabilities, action_probs
 
     def save_checkpoint(self):
         T.save(self.state_dict(), self.checkpoint_file)
