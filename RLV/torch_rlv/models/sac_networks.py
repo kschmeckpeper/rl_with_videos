@@ -1,4 +1,6 @@
 import os
+
+import torch
 import torch as T
 import torch.nn.functional as F
 import torch.nn as nn
@@ -19,7 +21,7 @@ class CriticNetwork(nn.Module):
         self.checkpoint_dir = chkpt_dir
         self.checkpoint_file = os.path.join(self.checkpoint_dir, name + '_sac')
 
-        self.fc1 = nn.Linear(self.input_dims[0] + n_actions, self.fc1_dims)
+        self.fc1 = nn.Linear(self.input_dims[0] + 1, self.fc1_dims)
         self.fc2 = nn.Linear(self.fc1_dims, self.fc2_dims)
         self.q = nn.Linear(self.fc2_dims, 1)
 
@@ -29,7 +31,9 @@ class CriticNetwork(nn.Module):
         self.to(self.device)
 
     def forward(self, state, action):
-        action_value = self.fc1(T.cat([state, action], dim=1))
+        action = torch.reshape(action, (-1, 1))
+        temp = T.cat((state, action), dim=1)
+        action_value = self.fc1(temp)
         action_value = F.relu(action_value)
         action_value = self.fc2(action_value)
         action_value = F.relu(action_value)
@@ -186,7 +190,7 @@ class ActorNetworkDiscrete(nn.Module):
         z = z.float() * 1e-8
         log_action_probabilities = T.log(action_probs + z)
 
-        return action, log_action_probabilities, action_probs
+        return action, log_action_probabilities.view(-1), action_probs.view(-1)
 
     def save_checkpoint(self):
         T.save(self.state_dict(), self.checkpoint_file)

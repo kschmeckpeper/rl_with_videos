@@ -1,7 +1,7 @@
 import torch as T
 import torch.nn.functional as F
 from RLV.torch_rlv.buffer.replay_buffer import ReplayBuffer
-from RLV.torch_rlv.models.sac_networks import ActorNetwork, CriticNetwork, ValueNetwork
+from RLV.torch_rlv.models.sac_networks import ActorNetwork,ActorNetworkDiscrete, CriticNetwork, ValueNetwork
 
 
 def get_agent(env, action_space_type, experiment):
@@ -152,8 +152,8 @@ class AgentDiscrete:
         self.batch_size = batch_size
         self.n_actions = n_actions
 
-        self.actor = ActorNetwork(alpha, input_dims, n_actions=n_actions, fc1_dims=layer1_size, fc2_dims=layer2_size,
-                                  name='actor', max_action=env.action_space.high)
+        self.actor = ActorNetworkDiscrete(alpha, input_dims, n_actions=n_actions, fc1_dims=layer1_size, fc2_dims=layer2_size,
+                                  name='actor', max_action=env.action_space.n)
         self.critic_1 = CriticNetwork(beta, input_dims, n_actions=n_actions, fc1_dims=layer1_size, fc2_dims=layer2_size,
                                       name='critic_1')
         self.critic_2 = CriticNetwork(beta, input_dims, n_actions=n_actions, fc1_dims=layer1_size, fc2_dims=layer2_size,
@@ -167,7 +167,7 @@ class AgentDiscrete:
 
     def choose_action(self, observation):
         state = T.Tensor([observation]).to(self.actor.device)
-        actions, _ = self.actor.sample(state)
+        actions, _, _ = self.actor.sample(state)
 
         return actions.cpu().detach().numpy()[0]
 
