@@ -20,9 +20,11 @@ def get_acrobot_data(index_from, index_to):
     nxt = (dic_rwd_63['next_observations'], dic_rwd_79['next_observations'], dic_rwd_99['next_observations'])
     next_observations = np.concatenate(nxt)
 
+    # Obtain Terminal Boolean
     term = (dic_rwd_63['terminals'], dic_rwd_79['terminals'], dic_rwd_99['terminals'])
     terminal_states = np.concatenate(term)
 
+    # Obtain Actions - Targets for RLV
     tar = (dic_rwd_63['actions'], dic_rwd_79['actions'], dic_rwd_99['actions'])
     target = np.concatenate(tar)
 

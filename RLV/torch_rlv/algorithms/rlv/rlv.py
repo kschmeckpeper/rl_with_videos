@@ -21,39 +21,43 @@ class RLV:
         self.env = env
         self.agent = agent
         self.inverse_model = InverseModelNetwork(beta=0.0003, input_dims=6)
-        self.iterations = 1
+        self.iterations = 1  # TODO
 
     def run(self):
-        for _ in range(0, self.iterations):  ## TODO
-            st, next_st, term, target = get_acrobot_data(_ * 256, _ * 256 + 256)
+        with T.no_grad():
+            for _ in range(0, self.iterations):
+                state, next_state, terminal, target = get_acrobot_data(_ * 256, _ * 256 + 256)
+
+                for __ in range(0, self.agent.batch_size):
+                    self.agent.remember_action_free(state[__], next_state[__], terminal[__], target[__])
+
+                state_obs, next_state_obs, target, done_obs = \
+                    self.agent.memory_action_free.sample_buffer(self.agent.batch_size)
+
+                predicted_action_obs = self.inverse_model(T.from_numpy(state_obs).float())
+                reward_obs = np.zeros((self.agent.batch_size, 1))
+
+                for j in range(0, self.agent.batch_size):
+                    reward_obs[j] = set_reward(done_obs[j])
+
+                reward_obs = T.from_numpy(reward_obs)
+
+                state_obs = T.from_numpy(state_obs)
+                next_state_obs = T.from_numpy(next_state_obs)
+                done_obs = T.from_numpy(done_obs)
+                target = T.from_numpy(target).float()
+
+
+                done_obs = T.reshape(done_obs, (256, 1))
 
             for __ in range(0, self.agent.batch_size):
-                self.agent.remember_action_free(st[__], next_st[__], term[__], target[__])
-
-            state_obs, next_state_obs, done_obs, target = \
-                self.agent.memory_action_free.sample_buffer(self.agent.batch_size)
-
-            predicted_action_obs = self.inverse_model(T.from_numpy(state_obs).float())
-            set_reward_obs = np.zeros((self.agent.batch_size, 6))
-
-            for __ in range(0, self.agent.batch_size):
-                set_reward_obs[__] = set_reward(done_obs[__])
-
-            state_obs = T.from_numpy(state_obs)
-            next_state_obs = T.from_numpy(next_state_obs)
-            set_reward_obs = T.from_numpy(set_reward_obs)
-            done_obs = T.from_numpy(done_obs)
-            target = T.from_numpy(target).float()
-
-            #done_obs = T.reshape(done_obs, (256, 1))'
-
-            # for __ in range(0, self.agent.batch_size):
-            #     self.agent.remember(state_obs[__], predicted_action_obs[__],
-            #                         set_reward_obs[__], next_state_obs[__], done_obs[__])
+                self.agent.remember(state_obs[__], predicted_action_obs[__],
+                                    reward_obs[__], next_state_obs[__], done_obs[__])
 
             # # Agent, Agent Funktion replace_replay_buffer
 
-            # self.inverse_model.optimizer.zero_grad()
-            # loss = self.inverse_model.criterion(predicted_action_obs, target)
-            # loss.backward()
+
+            self.inverse_model.optimizer.zero_grad()
+            loss = self.inverse_model.criterion(predicted_action_obs, target)
+            loss.backward()
             # self.inverse_model.optimizer.step()
