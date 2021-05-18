@@ -14,7 +14,7 @@ def get_agent(env, action_space_type, experiment):
 
     elif action_space_type == "discrete":
         return AgentDiscrete(alpha=experiment.lr, beta=experiment.lr, input_dims=env.observation_space.shape, env=env,
-                             n_actions=env.action_space.n, layer1_size=experiment.layer1_size,
+                             n_actions=1, layer1_size=experiment.layer1_size,
                              layer2_size=experiment.layer2_size)
 
 
@@ -23,7 +23,7 @@ class Agent:
                  env=None, gamma=0.99, n_actions=2, max_size=1000000, tau=0.005,
                  layer1_size=256, layer2_size=256, batch_size=256, reward_scale=2):
         if input_dims is None:
-            input_dims = [6]
+            input_dims = [1]
         self.gamma = gamma
         self.tau = tau
         self.memory = ReplayBuffer(max_size, input_dims, n_actions)
@@ -145,10 +145,10 @@ class Agent:
 
 class AgentDiscrete:
     def __init__(self, alpha=0.0003, beta=0.0003, input_dims=None,
-                 env=None, gamma=0.99, n_actions=2, max_size=1000000, tau=0.005,
+                 env=None, gamma=0.99, n_actions=1, max_size=1000000, tau=0.005,
                  layer1_size=256, layer2_size=256, batch_size=256, reward_scale=2):
         if input_dims is None:
-            input_dims = [6]
+            input_dims = [1]
         self.gamma = gamma
         self.tau = tau
         self.memory = ReplayBuffer(max_size, input_dims, n_actions)
@@ -244,9 +244,8 @@ class AgentDiscrete:
 
         actions, log_probs = self.actor.sample(state, reparameterize=True)
         log_probs = log_probs.view(-1)
-        actions = T.narrow(actions,1,0,1)
-        q1_new_policy = self.critic_1.forward(state, action)
-        q2_new_policy = self.critic_2.forward(state, action)
+        q1_new_policy = self.critic_1.forward(state, actions)
+        q2_new_policy = self.critic_2.forward(state, actions)
         critic_value = T.min(q1_new_policy, q2_new_policy)
         critic_value = critic_value.view(-1)
 
@@ -259,8 +258,8 @@ class AgentDiscrete:
         self.critic_1.optimizer.zero_grad()
         self.critic_2.optimizer.zero_grad()
         q_hat = self.scale * reward + self.gamma * value_
-        q1_old_policy = self.critic_1.forward(state, actions).view(-1)
-        q2_old_policy = self.critic_2.forward(state, actions).view(-1)
+        q1_old_policy = self.critic_1.forward(state, action).view(-1)
+        q2_old_policy = self.critic_2.forward(state, action).view(-1)
         critic_1_loss = 0.5 * F.mse_loss(q1_old_policy, q_hat)
         critic_2_loss = 0.5 * F.mse_loss(q2_old_policy, q_hat)
 
