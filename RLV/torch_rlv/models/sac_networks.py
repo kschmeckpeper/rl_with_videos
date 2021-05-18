@@ -32,7 +32,7 @@ class CriticNetwork(nn.Module):
         self.to(self.device)
 
     def forward(self, state, action):
-        # action = torch.reshape(action, (-1, 1))
+        action = torch.reshape(action, (-1, 1))
         temp = T.cat((state, action), dim=1)
         action_value = self.fc1(temp)
         action_value = F.relu(action_value)
@@ -188,13 +188,12 @@ class ActorNetworkDiscrete(nn.Module):
         if reparameterize:
             samples = action_distribution.rsample()
         else:
-            samples = action_distribution.sample()
+            samples = action_distribution.sample() * T.tensor(self.max_action).to(self.device)
 
         actions = samples
         log_probs = action_distribution.log_prob(actions)
-        actions *= T.tensor(self.max_action).to(self.device)
 
-        return actions, log_probs
+        return actions.view(-1), log_probs
 
     def save_checkpoint(self):
         T.save(self.state_dict(), self.checkpoint_file)
@@ -208,7 +207,7 @@ class GumbelSoftmax(RelaxedOneHotCategorical, ABC):
         super().__init__(temperature, logits=logits)
 
     def sample(self, sample_shape=256):
-        u = torch.empty(self.logits.size(), device=self.logits.device, dtype=self.logits.dtype).uniform_(to=2)
+        u = torch.empty(self.logits.size(), device=self.logits.device, dtype=self.logits.dtype).uniform_(to=1)
         noisy_logits = self.logits - torch.log(-torch.log(u))
         return torch.argmax(noisy_logits, dim=-1)
 

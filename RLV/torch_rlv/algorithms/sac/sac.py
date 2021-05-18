@@ -17,19 +17,20 @@ class SAC:
         self.best_score = env.reward_range[0]
         self.score_history = []
 
-    def run(self):
+    def run(self,  cnt=-1, plot=False):
 
         if self.load_checkpoint:
             self.agent.load_models()
             self.env.render(mode='human')
 
         obs = self.env.reset()
+        acts = []
         for _ in range(self.pre_steps):
             action = self.env.action_space.sample()
+            acts.append(action)
             obs_, reward, done, info = self.env.step(action)
             self.agent.remember(obs, action, reward, obs_, done)
             obs = obs_
-
         for i in range(self.n_games):
             observation = self.env.reset()
             done = False
@@ -49,9 +50,12 @@ class SAC:
                 self.best_score = avg_score
                 if not self.load_checkpoint:
                     self.agent.save_models()
-
+            if cnt != -1:
+                print('episode ', cnt, ' score %.1f' % score, ' avg_score %.1f' % avg_score)
+                return
             print('episode ', i, ' score %.1f' % score, ' avg_score %.1f' % avg_score)
 
-        if not self.load_checkpoint:
-            x = [i + 1 for i in range(self.n_games)]
-            utils.plot_learning_curve(x, self.score_history, self.figure_file)
+        if plot:
+            if not self.load_checkpoint:
+                x = [i + 1 for i in range(self.n_games)]
+                utils.plot_learning_curve(x, self.score_history, self.figure_file)
