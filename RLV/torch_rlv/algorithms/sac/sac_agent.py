@@ -1,7 +1,8 @@
 import torch as T
 import torch.nn.functional as F
+from RLV.torch_rlv.buffer.action_free_replay_buffer import ActionFreeReplayBuffer
 from RLV.torch_rlv.buffer.replay_buffer import ReplayBuffer
-from RLV.torch_rlv.models.sac_networks import ActorNetwork,ActorNetworkDiscrete, CriticNetwork, ValueNetwork
+from RLV.torch_rlv.models.sac_networks import ActorNetwork, ActorNetworkDiscrete, CriticNetwork, ValueNetwork
 
 
 def get_agent(env, action_space_type, experiment):
@@ -25,6 +26,7 @@ class Agent:
         self.gamma = gamma
         self.tau = tau
         self.memory = ReplayBuffer(max_size, input_dims, n_actions)
+        self.memory_action_free = ActionFreeReplayBuffer(max_size, input_dims, n_actions)
         self.batch_size = batch_size
         self.n_actions = n_actions
 
@@ -148,6 +150,7 @@ class AgentDiscrete:
         self.gamma = gamma
         self.tau = tau
         self.memory = ReplayBuffer(max_size, input_dims, n_actions)
+        self.memory_action_free = ActionFreeReplayBuffer(max_size, input_dims, n_actions)
         self.batch_size = batch_size
         self.n_actions = n_actions
 
@@ -172,6 +175,9 @@ class AgentDiscrete:
 
     def remember(self, state, action, reward, new_state, done):
         self.memory.store_transition(state, action, reward, new_state, done)
+
+    def remember_action_free(self, state, new_state, done, target):
+        self.memory_action_free.store_transition(state, new_state, done, target)
 
     def update_network_parameters(self, tau=None):
         if tau is None:

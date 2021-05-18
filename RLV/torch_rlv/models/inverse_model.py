@@ -19,13 +19,14 @@ class InverseModelNetwork(nn.Module):
         self.checkpoint_dir = chkpt_dir
         self.checkpoint_file = os.path.join(self.checkpoint_dir, name + '_inverse')
 
-        self.fc1 = nn.Linear(self.input_dims[1], self.fc1_dims)
+        self.fc1 = nn.Linear(self.input_dims, self.fc1_dims)
         self.fc2 = nn.Linear(self.fc1_dims, self.fc2_dims)
         self.fc3 = nn.Linear(self.fc2_dims, self.fc3_dims)
         self.q = nn.Linear(self.fc3_dims, output_dims)
 
         self.optimizer = optim.Adam(self.parameters(), lr=beta)
-        self.device = T.device('cuda:0' if T.cuda.is_available() else 'cpu')
+        self.criterion = nn.MSELoss()
+        self.device = 'cpu'
 
     def forward(self, x):
         x = F.relu(self.fc1(x))

@@ -9,7 +9,7 @@ def run_torch_rlv(config):
 run_torch_rlv({
     'action_space_type': 'discrete',
     'env_name': 'acrobot',
-    'algo_name': 'sac',
+    'algo_name': 'rlv',
     'n_actions': 250,
     'pre_steps': 1000,
     'layer1_size': 256,
