@@ -12,7 +12,7 @@ class SAC:
         self.load_checkpoint = load_checkpoint
         self.filename = env_name + '.png'
 
-        self.figure_file = 'plots/' + self.filename
+        self.figure_file = 'output/plots/' + self.filename
 
         self.best_score = env.reward_range[0]
         self.score_history = []
@@ -23,17 +23,18 @@ class SAC:
             self.agent.load_models()
             self.env.render(mode='human')
 
+        obs = self.env.reset()
         for _ in range(self.pre_steps):
-            obs = self.env.reset()
-            action = self.agent.choose_action(obs)
-            observation_, reward, done, info = self.env.step(action)
-            self.agent.remember(obs, action, reward, observation_, done)
+            action = self.env.action_space.sample()
+            obs_, reward, done, info = self.env.step(action)
+            self.agent.remember(obs, action, reward, obs_, done)
+            obs = obs_
 
         for i in range(self.n_games):
             observation = self.env.reset()
             done = False
             score = 0
-            while not done:
+            for _ in range(100):
                 action = self.agent.choose_action(observation)
                 observation_, reward, done, info = self.env.step(action)
                 score += reward

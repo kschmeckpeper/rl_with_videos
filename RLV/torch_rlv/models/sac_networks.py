@@ -1,4 +1,5 @@
 import os
+from abc import ABC
 
 import torch
 import torch as T
@@ -6,7 +7,7 @@ import torch.nn.functional as F
 import torch.nn as nn
 import torch.optim as optim
 from torch.distributions.normal import Normal
-from torch.distributions.categorical import Categorical
+from torch.distributions.relaxed_categorical import RelaxedOneHotCategorical
 
 
 class CriticNetwork(nn.Module):
@@ -31,7 +32,7 @@ class CriticNetwork(nn.Module):
         self.to(self.device)
 
     def forward(self, state, action):
-        action = torch.reshape(action, (-1, 1))
+        # action = torch.reshape(action, (-1, 1))
         temp = T.cat((state, action), dim=1)
         action_value = self.fc1(temp)
         action_value = F.relu(action_value)
@@ -180,22 +181,38 @@ class ActorNetworkDiscrete(nn.Module):
 
         return act_prob
 
-    def sample(self, state):
+    def sample(self, state, reparameterize=True):
         action_probs = self.forward(state)
-        action_distribution = Categorical(action_probs)
+        action_distribution = GumbelSoftmax(action_probs, T.tensor([1.0]))
 
-        action = action_distribution.sample().cpu()
+        if reparameterize:
+            samples = action_distribution.rsample()
+        else:
+            samples = action_distribution.sample()
 
-        z = action_probs == 0.0
-        z = z.float() * 1e-8
-        log_action_probabilities = T.log(action_probs + z)
-        log_action_probabilities = log_action_probabilities.sum(1, keepdim=True)
-        action_probs = action_probs.sum(1, keepdim=True)
+        actions = samples
+        log_probs = action_distribution.log_prob(actions)
 
-        return action, log_action_probabilities, action_probs
+        return actions, log_probs
 
     def save_checkpoint(self):
         T.save(self.state_dict(), self.checkpoint_file)
 
     def load_checkpoint(self):
         self.load_state_dict(T.load(self.checkpoint_file))
+
+
+class GumbelSoftmax(RelaxedOneHotCategorical, ABC):
+    def __init__(self, logits, temperature):
+        super().__init__(temperature, logits=logits)
+
+    def sample(self, sample_shape=256):
+        u = torch.empty(self.logits.size(), device=self.logits.device, dtype=self.logits.dtype).uniform_(to=2)
+        noisy_logits = self.logits - torch.log(-torch.log(u))
+        return torch.argmax(noisy_logits, dim=-1)
+
+    def log_prob(self, value):
+        if value.shape != self.logits.shape:
+            value = F.one_hot(value.long(), self.logits.shape[-1]).float()
+            assert value.shape == self.logits.shape
+        return - torch.sum(- value * F.log_softmax(self.logits, -1), -1)

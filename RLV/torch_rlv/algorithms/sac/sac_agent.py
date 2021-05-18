@@ -1,7 +1,8 @@
+import numpy as np
 import torch as T
 import torch.nn.functional as F
 from RLV.torch_rlv.buffer.replay_buffer import ReplayBuffer
-from RLV.torch_rlv.models.sac_networks import ActorNetwork,ActorNetworkDiscrete, CriticNetwork, ValueNetwork
+from RLV.torch_rlv.models.sac_networks import ActorNetwork, ActorNetworkDiscrete, CriticNetwork, ValueNetwork
 
 
 def get_agent(env, action_space_type, experiment):
@@ -12,7 +13,7 @@ def get_agent(env, action_space_type, experiment):
 
     elif action_space_type == "discrete":
         return AgentDiscrete(alpha=experiment.lr, beta=experiment.lr, input_dims=env.observation_space.shape, env=env,
-                             n_actions=1, layer1_size=experiment.layer1_size,
+                             n_actions=env.action_space.n, layer1_size=experiment.layer1_size,
                              layer2_size=experiment.layer2_size)
 
 
@@ -97,7 +98,7 @@ class Agent:
         value_ = self.target_value(state_).view(-1)
         value_[done] = 0.0
 
-        actions, log_probs = self.actor.sample_normal(state, reparameterize=False)
+        actions, log_probs = self.actor.sample(state, reparameterize=False)
         log_probs = log_probs.view(-1)
         q1_new_policy = self.critic_1.forward(state, actions)
         q2_new_policy = self.critic_2.forward(state, actions)
@@ -110,7 +111,7 @@ class Agent:
         value_loss.backward(retain_graph=True)
         self.value.optimizer.step()
 
-        actions, log_probs = self.actor.sample_normal(state, reparameterize=True)
+        actions, log_probs = self.actor.sample(state, reparameterize=True)
         log_probs = log_probs.view(-1)
         q1_new_policy = self.critic_1.forward(state, actions)
         q2_new_policy = self.critic_2.forward(state, actions)
@@ -151,8 +152,9 @@ class AgentDiscrete:
         self.batch_size = batch_size
         self.n_actions = n_actions
 
-        self.actor = ActorNetworkDiscrete(alpha, input_dims, n_actions=n_actions, fc1_dims=layer1_size, fc2_dims=layer2_size,
-                                  name='actor_discr', max_action=env.action_space.n)
+        self.actor = ActorNetworkDiscrete(alpha, input_dims, n_actions=n_actions, fc1_dims=layer1_size,
+                                          fc2_dims=layer2_size,
+                                          name='actor_discrete', max_action=1)
         self.critic_1 = CriticNetwork(beta, input_dims, n_actions=n_actions, fc1_dims=layer1_size, fc2_dims=layer2_size,
                                       name='critic_1')
         self.critic_2 = CriticNetwork(beta, input_dims, n_actions=n_actions, fc1_dims=layer1_size, fc2_dims=layer2_size,
@@ -166,9 +168,9 @@ class AgentDiscrete:
 
     def choose_action(self, observation):
         state = T.Tensor([observation]).to(self.actor.device)
-        actions, _, _ = self.actor.sample(state)
+        actions, _ = self.actor.sample(state, reparameterize=True)
 
-        return actions.cpu().detach().numpy()[0]
+        return np.argmax(actions.cpu().detach().numpy()[0])
 
     def remember(self, state, action, reward, new_state, done):
         self.memory.store_transition(state, action, reward, new_state, done)
@@ -190,8 +192,6 @@ class AgentDiscrete:
         self.target_value.load_state_dict(value_state_dict)
 
     def save_models(self):
-        import os
-        print(os.getcwd())
         print('.... saving models ....')
         self.actor.save_checkpoint()
         self.value.save_checkpoint()
@@ -222,22 +222,29 @@ class AgentDiscrete:
         value_ = self.target_value(state_).view(-1)
         value_[done] = 0.0
 
-        actions, log_action_probs, action_probs = self.actor.sample(state)
-        log_action_probs = log_action_probs.view(-1)
-        action_probs = action_probs.view(-1)
+        actions, log_probs = self.actor.sample(state, reparameterize=False)
+        log_probs = log_probs.view(-1)
         q1_new_policy = self.critic_1.forward(state, actions)
         q2_new_policy = self.critic_2.forward(state, actions)
         critic_value = T.min(q1_new_policy, q2_new_policy)
         critic_value = critic_value.view(-1)
 
         self.value.optimizer.zero_grad()
-        value_target = action_probs * (critic_value - log_action_probs)
+        value_target = critic_value - log_probs
         value_loss = 0.5 * F.mse_loss(value, value_target)
         value_loss.backward(retain_graph=True)
         self.value.optimizer.step()
 
-        actor_loss = log_action_probs - critic_value
-        actor_loss = T.mean(action_probs * actor_loss)
+        actions, log_probs = self.actor.sample(state, reparameterize=True)
+        log_probs = log_probs.view(-1)
+        actions = T.narrow(actions,1,0,1)
+        q1_new_policy = self.critic_1.forward(state, action)
+        q2_new_policy = self.critic_2.forward(state, action)
+        critic_value = T.min(q1_new_policy, q2_new_policy)
+        critic_value = critic_value.view(-1)
+
+        actor_loss = log_probs - critic_value
+        actor_loss = T.mean(actor_loss)
         self.actor.optimizer.zero_grad()
         actor_loss.backward(retain_graph=True)
         self.actor.optimizer.step()
@@ -245,8 +252,8 @@ class AgentDiscrete:
         self.critic_1.optimizer.zero_grad()
         self.critic_2.optimizer.zero_grad()
         q_hat = self.scale * reward + self.gamma * value_
-        q1_old_policy = self.critic_1.forward(state, action.view(-1)).view(-1)
-        q2_old_policy = self.critic_2.forward(state, action.view(-1)).view(-1)
+        q1_old_policy = self.critic_1.forward(state, actions).view(-1)
+        q2_old_policy = self.critic_2.forward(state, actions).view(-1)
         critic_1_loss = 0.5 * F.mse_loss(q1_old_policy, q_hat)
         critic_2_loss = 0.5 * F.mse_loss(q2_old_policy, q_hat)
 
