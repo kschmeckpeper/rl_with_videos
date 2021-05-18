@@ -31,8 +31,9 @@ class Agent:
         self.batch_size = batch_size
         self.n_actions = n_actions
 
-        self.actor = ActorNetwork(alpha, input_dims, n_actions=n_actions, fc1_dims=layer1_size, fc2_dims=layer2_size,
-                                  name='actor', max_action=env.action_space.high)
+        self.actor = ActorNetworkDiscrete(alpha, input_dims, n_actions=n_actions, fc1_dims=layer1_size,
+                                          fc2_dims=layer2_size,
+                                          name='actor_discrete', max_action=env.action_space.high)
         self.critic_1 = CriticNetwork(beta, input_dims, n_actions=n_actions, fc1_dims=layer1_size, fc2_dims=layer2_size,
                                       name='critic_1')
         self.critic_2 = CriticNetwork(beta, input_dims, n_actions=n_actions, fc1_dims=layer1_size, fc2_dims=layer2_size,
@@ -157,7 +158,7 @@ class AgentDiscrete:
 
         self.actor = ActorNetworkDiscrete(alpha, input_dims, n_actions=n_actions, fc1_dims=layer1_size,
                                           fc2_dims=layer2_size,
-                                          name='actor_discrete', max_action=3)
+                                          name='actor_discrete', max_action=1)
         self.critic_1 = CriticNetwork(beta, input_dims, n_actions=n_actions, fc1_dims=layer1_size, fc2_dims=layer2_size,
                                       name='critic_1')
         self.critic_2 = CriticNetwork(beta, input_dims, n_actions=n_actions, fc1_dims=layer1_size, fc2_dims=layer2_size,
