@@ -157,7 +157,7 @@ class AgentDiscrete:
 
         self.actor = ActorNetworkDiscrete(alpha, input_dims, n_actions=n_actions, fc1_dims=layer1_size,
                                           fc2_dims=layer2_size,
-                                          name='actor_discrete', max_action=1)
+                                          name='actor_discrete', max_action=3)
         self.critic_1 = CriticNetwork(beta, input_dims, n_actions=n_actions, fc1_dims=layer1_size, fc2_dims=layer2_size,
                                       name='critic_1')
         self.critic_2 = CriticNetwork(beta, input_dims, n_actions=n_actions, fc1_dims=layer1_size, fc2_dims=layer2_size,

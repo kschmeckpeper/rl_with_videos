@@ -192,6 +192,7 @@ class ActorNetworkDiscrete(nn.Module):
 
         actions = samples
         log_probs = action_distribution.log_prob(actions)
+        actions *= T.tensor(self.max_action).to(self.device)
 
         return actions, log_probs
 
