@@ -4,7 +4,7 @@ import os
 import torch as T
 
 
-def get_acrobot_data(index):
+def get_acrobot_data(index_from, index_to):
     current_directory = os.path.dirname(__file__)
 
     # Unpickle
@@ -20,11 +20,13 @@ def get_acrobot_data(index):
     nxt = (dic_rwd_63['next_observations'], dic_rwd_79['next_observations'], dic_rwd_99['next_observations'])
     next_observations = np.concatenate(nxt)
 
+    # Obtain Terminal Boolean
     term = (dic_rwd_63['terminals'], dic_rwd_79['terminals'], dic_rwd_99['terminals'])
     terminal_states = np.concatenate(term)
 
+    # Obtain Actions - Targets for RLV
     tar = (dic_rwd_63['actions'], dic_rwd_79['actions'], dic_rwd_99['actions'])
     target = np.concatenate(tar)
 
-    return T.from_numpy(observations[index]), T.from_numpy(next_observations[index]), \
-           T.from_numpy(terminal_states[index]), T.from_numpy(target[index])
+    return T.from_numpy(observations[index_from:index_to]), T.from_numpy(next_observations[index_from:index_to]), \
+           T.from_numpy(terminal_states[index_from:index_to]), T.from_numpy(target[index_from:index_to])

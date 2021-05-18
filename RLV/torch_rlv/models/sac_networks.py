@@ -33,6 +33,7 @@ class CriticNetwork(nn.Module):
 
     def forward(self, state, action):
         action = torch.reshape(action, (-1, 1))
+
         temp = T.cat((state, action), dim=1)
         action_value = self.fc1(temp)
         action_value = F.relu(action_value)
@@ -192,6 +193,10 @@ class ActorNetworkDiscrete(nn.Module):
 
         actions = samples
         log_probs = action_distribution.log_prob(actions)
+
+        
+        #actions *= T.tensor(self.max_action).to(self.device)
+
 
         return actions.view(-1), log_probs
 
