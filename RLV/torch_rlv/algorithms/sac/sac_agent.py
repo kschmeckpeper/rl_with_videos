@@ -53,6 +53,9 @@ class Agent:
     def remember(self, state, action, reward, new_state, done):
         self.memory.store_transition(state, action, reward, new_state, done)
 
+    def replace_memory(self, new_buffer):
+        self.memory = new_buffer
+
     def update_network_parameters(self, tau=None):
         if tau is None:
             tau = self.tau
@@ -142,10 +145,11 @@ class Agent:
         self.update_network_parameters()
 
 
-class AgentDiscrete:
-    def __init__(self, alpha=0.0003, beta=0.0003, input_dims=None,
-                 env=None, gamma=0.99, n_actions=1, max_size=1000000, tau=0.005,
-                 layer1_size=256, layer2_size=256, batch_size=256, reward_scale=2):
+class AgentDiscrete(Agent):
+    def __init__(self, alpha=0.0003, beta=0.0003, input_dims=None, env=None, gamma=0.99, n_actions=1, max_size=1000000,
+                 tau=0.005, layer1_size=256, layer2_size=256, batch_size=256, reward_scale=2):
+        super().__init__(alpha, beta, input_dims, env, gamma, n_actions, max_size, tau, layer1_size, layer2_size,
+                         batch_size, reward_scale)
         if input_dims is None:
             input_dims = [1]
         self.gamma = gamma
@@ -196,22 +200,6 @@ class AgentDiscrete:
                                      (1 - tau) * target_value_state_dict[name].clone()
 
         self.target_value.load_state_dict(value_state_dict)
-
-    def save_models(self):
-        print('.... saving models ....')
-        self.actor.save_checkpoint()
-        self.value.save_checkpoint()
-        self.target_value.save_checkpoint()
-        self.critic_1.save_checkpoint()
-        self.critic_2.save_checkpoint()
-
-    def load_models(self):
-        print('.... loading models ....')
-        self.actor.load_checkpoint()
-        self.value.load_checkpoint()
-        self.target_value.load_checkpoint()
-        self.critic_1.load_checkpoint()
-        self.critic_2.load_checkpoint()
 
     def learn(self):
         if self.memory.mem_cntr < self.batch_size:

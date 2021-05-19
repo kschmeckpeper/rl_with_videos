@@ -147,7 +147,7 @@ class ActorNetwork(nn.Module):
         self.load_state_dict(T.load(self.checkpoint_file))
 
 
-class ActorNetworkDiscrete(nn.Module):
+class ActorNetworkDiscrete(ActorNetwork):
     def __init__(self, alpha, input_dims, max_action, fc1_dims=256,
                  fc2_dims=256, n_actions=2, name='actor_discr', chkpt_dir='tmp/sac'):
         super(ActorNetworkDiscrete, self).__init__()
@@ -188,18 +188,12 @@ class ActorNetworkDiscrete(nn.Module):
         if reparameterize:
             samples = action_distribution.rsample()
         else:
-            samples = action_distribution.sample() * T.tensor(self.max_action).to(self.device)
+            samples = action_distribution.sample()
 
         actions = samples
         log_probs = action_distribution.log_prob(actions)
 
         return actions.view(-1), log_probs
-
-    def save_checkpoint(self):
-        T.save(self.state_dict(), self.checkpoint_file)
-
-    def load_checkpoint(self):
-        self.load_state_dict(T.load(self.checkpoint_file))
 
 
 class GumbelSoftmax(RelaxedOneHotCategorical, ABC):
