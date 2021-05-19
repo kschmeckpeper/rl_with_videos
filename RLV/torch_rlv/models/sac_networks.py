@@ -7,7 +7,7 @@ import torch.nn.functional as F
 import torch.nn as nn
 import torch.optim as optim
 from torch.distributions.normal import Normal
-from torch.distributions.relaxed_categorical import RelaxedOneHotCategorical
+from torch.distributions.categorical import Categorical
 
 
 class CriticNetwork(nn.Module):
@@ -32,7 +32,7 @@ class CriticNetwork(nn.Module):
         self.to(self.device)
 
     def forward(self, state, action):
-        action = torch.reshape(action, (-1, 1))
+        # action = torch.reshape(action, (-1, 1))
         temp = T.cat((state, action), dim=1)
         action_value = self.fc1(temp)
         action_value = F.relu(action_value)
@@ -88,7 +88,7 @@ class ValueNetwork(nn.Module):
 
 
 class ActorNetwork(nn.Module):
-    def __init__(self, alpha, input_dims, max_action, fc1_dims=256,
+    def __init__(self, alpha, input_dims, max_action=1, fc1_dims=256,
                  fc2_dims=256, n_actions=2, name='actor', chkpt_dir='tmp/sac'):
         super(ActorNetwork, self).__init__()
         self.input_dims = input_dims
@@ -147,7 +147,7 @@ class ActorNetwork(nn.Module):
         self.load_state_dict(T.load(self.checkpoint_file))
 
 
-class ActorNetworkDiscrete(ActorNetwork):
+class ActorNetworkDiscrete(nn.Module):
     def __init__(self, alpha, input_dims, max_action, fc1_dims=256,
                  fc2_dims=256, n_actions=2, name='actor_discr', chkpt_dir='tmp/sac'):
         super(ActorNetworkDiscrete, self).__init__()
@@ -181,32 +181,20 @@ class ActorNetworkDiscrete(ActorNetwork):
 
         return act_prob
 
-    def sample(self, state, reparameterize=True):
+    def sample(self, state, **kwargs):
         action_probs = self.forward(state)
-        action_distribution = GumbelSoftmax(action_probs, T.tensor([1.0]))
+        # action_probs = F.softmax(action_probs, dim=1)
+        action_dist = Categorical(action_probs)
+        actions = action_dist.sample().view(-1, 1)
+        actions = actions
 
-        if reparameterize:
-            samples = action_distribution.rsample()
-        else:
-            samples = action_distribution.sample()
+        z = (action_probs == 0.0).float() * 1e-8
+        log_action_probs = torch.log(action_probs + z)
 
-        actions = samples
-        log_probs = action_distribution.log_prob(actions)
+        return actions, action_probs, log_action_probs
 
-        return actions.view(-1), log_probs
+    def save_checkpoint(self):
+        T.save(self.state_dict(), self.checkpoint_file)
 
-
-class GumbelSoftmax(RelaxedOneHotCategorical, ABC):
-    def __init__(self, logits, temperature):
-        super().__init__(temperature, logits=logits)
-
-    def sample(self, sample_shape=256):
-        u = torch.empty(self.logits.size(), device=self.logits.device, dtype=self.logits.dtype).uniform_(to=1)
-        noisy_logits = self.logits - torch.log(-torch.log(u))
-        return torch.argmax(noisy_logits, dim=-1)
-
-    def log_prob(self, value):
-        if value.shape != self.logits.shape:
-            value = F.one_hot(value.long(), self.logits.shape[-1]).float()
-            assert value.shape == self.logits.shape
-        return - torch.sum(- value * F.log_softmax(self.logits, -1), -1)
+    def load_checkpoint(self):
+        self.load_state_dict(T.load(self.checkpoint_file))

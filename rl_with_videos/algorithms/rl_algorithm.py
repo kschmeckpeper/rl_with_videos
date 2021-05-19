@@ -96,7 +96,7 @@ class RLAlgorithm(tf.contrib.checkpoint.Checkpointable):
 
         self.sampler.initialize(env, initial_exploration_policy, pool)
         while pool.size < self._n_initial_exploration_steps:
-            self.sampler.sample()
+            self.sampler.sample(,
 
     def _training_before_hook(self):
         """Method called before the actual training loops."""
@@ -340,7 +340,7 @@ class RLAlgorithm(tf.contrib.checkpoint.Checkpointable):
         return self.sampler.batch_ready()
 
     def _do_sampling(self, timestep):
-        self.sampler.sample()
+        self.sampler.sample(,
 
     def _do_training_repeats(self, timestep):
         """Repeat training _n_train_repeat times every _train_every_n_steps"""

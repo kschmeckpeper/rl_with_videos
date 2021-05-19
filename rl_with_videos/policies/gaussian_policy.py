@@ -71,7 +71,7 @@ class GaussianPolicy(LatentSpacePolicy):
             scale_diag=tf.ones(output_shape))
 
         latents = tf.keras.layers.Lambda(
-            lambda batch_size: base_distribution.sample(batch_size)
+            lambda batch_size: base_distribution.sample(batch_size, )
         )(batch_size)
 
         self.latents_model = tf.keras.Model(self.condition_inputs, latents)
