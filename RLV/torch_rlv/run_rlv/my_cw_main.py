@@ -1,6 +1,5 @@
 from cw2.cw_data import cw_logging
-from cw2 import experiment, cluster_work
-import gc
+from cw2 import experiment, cluster_work, cw_error
 from torch_rlv import run_torch_rlv
 
 
@@ -10,17 +9,12 @@ class CustomExperiment(experiment.AbstractExperiment):
         pass
 
     def run(self, config: dict, rep: int, logger: cw_logging.LoggerArray) -> None:
-        run_torch_rlv(config)
+        my_config = config.get("params")  # move into custom config. This is now everything that you specified
+        run_torch_rlv(config=my_config)
 
-    def finalize(self, crash: bool = False):  # called after the current repetition finishes or crashes
-        if crash:
-            # run failed. You can do some error handling here.
-            pass
-        self._logger.info("Finishing current run. \n")
-        # clean up
-        gc.collect()  # make sure there is no residual stuff left
-        while self._logger.hasHandlers():
-            self._logger.removeHandler(self._logger.handlers[0])
+    def finalize(self, surrender: cw_error.ExperimentSurrender = None, crash: bool = False):
+        # Skip for Quickguide
+        pass
 
 
 if __name__ == "__main__":

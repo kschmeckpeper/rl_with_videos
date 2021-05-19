@@ -20,17 +20,28 @@ sbatch_args:    # Dictionary of SBATCH keywords and arguments
 name: "DEFAULT"   # MUST BE DEFAULT
 
 # Implementation default parameters
-path: "./experiments/clusterwork/"   # location to save results in
+path: "./output/"   # location to save results in
 repetitions: 1   # number of times one set of parameters is run
-
-reps_per_job: 1 # number of repetitions in each job. useful for paralellization. defaults to 1.
-reps_in_parallel: 1 # number of repetitions in each job that are executed in parallel. defaults to 1.
-
 
 params:
   # this is where you specify all parameters needed for your experiment.
   # the tree structure you define here will be translated to a nested python dictionary
-  action_space_type': 'discrete'
+  action_space_type: 'discrete'
+  env_name: 'acrobot'
+  algo_name: 'sac'
+  n_actions: 250
+  pre_steps: 1000
+  layer1_size: 256
+  layer2_size: 256
+  lr: 0.003
+
+---
+name: "my_run"
+path: "./output/"
+repetitions: 1   # repeat 8 times
+
+params:
+  action_space_type: 'discrete'
   env_name: 'acrobot'
   algo_name: 'rlv'
   n_actions: 250
