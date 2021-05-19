@@ -1,6 +1,4 @@
 import os
-from abc import ABC
-
 import torch
 import torch as T
 import torch.nn.functional as F
@@ -32,7 +30,6 @@ class CriticNetwork(nn.Module):
         self.to(self.device)
 
     def forward(self, state, action):
-        # action = torch.reshape(action, (-1, 1))
         temp = T.cat((state, action), dim=1)
         action_value = self.fc1(temp)
         action_value = F.relu(action_value)
@@ -181,9 +178,8 @@ class ActorNetworkDiscrete(nn.Module):
 
         return act_prob
 
-    def sample(self, state, **kwargs):
+    def sample(self, state):
         action_probs = self.forward(state)
-        # action_probs = F.softmax(action_probs, dim=1)
         action_dist = Categorical(action_probs)
         actions = action_dist.sample().view(-1, 1)
         actions = actions
