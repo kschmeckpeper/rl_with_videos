@@ -49,7 +49,7 @@ class RLV:
 
             s = SAC(env_name=self.env_name, env=self.env, agent=self.agent,
                     n_games=1, pre_steps=0)
-            s.run()
+            s.run(cnt=_)
 
             target_t = T.from_numpy(target).float()
 
