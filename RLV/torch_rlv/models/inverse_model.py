@@ -7,7 +7,7 @@ import torch.optim as optim
 
 class InverseModelNetwork(nn.Module):
 
-    def __init__(self, beta, input_dims, output_dims=1, fc1_dims=64, fc2_dims=64, fc3_dims=64, name='inverse', chkpt_dir='tmp/invese'):
+    def __init__(self, beta, input_dims, output_dims=3, fc1_dims=64, fc2_dims=64, fc3_dims=64, name='inverse', chkpt_dir='tmp/invese'):
         super(InverseModelNetwork, self).__init__()
         self.beta = beta
         self.input_dims = input_dims
