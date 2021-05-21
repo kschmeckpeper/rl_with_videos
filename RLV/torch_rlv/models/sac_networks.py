@@ -19,8 +19,8 @@ class CriticNetwork(nn.Module):
         self.name = name
         self.checkpoint_dir = chkpt_dir
         self.checkpoint_file = os.path.join(self.checkpoint_dir, name + '_sac')
-
-        self.fc1 = nn.Linear(self.input_dims[0] + 1, self.fc1_dims)
+        x_dim = self.input_dims[0] + n_actions
+        self.fc1 = nn.Linear(x_dim, self.fc1_dims)
         self.fc2 = nn.Linear(self.fc1_dims, self.fc2_dims)
         self.q = nn.Linear(self.fc2_dims, 1)
 
@@ -181,11 +181,15 @@ class ActorNetworkDiscrete(nn.Module):
     def sample(self, state):
         action_probs = self.forward(state)
         action_dist = Categorical(action_probs)
-        actions = action_dist.sample().view(-1, 1)
-        actions = actions
+
+        actions = action_dist.sample()
+        actions = F.one_hot(actions.clone().detach(), num_classes=self.n_actions)
 
         z = (action_probs == 0.0).float() * 1e-8
         log_action_probs = torch.log(action_probs + z)
+
+        action_probs = action_probs.sum(1, keepdim=True)
+        log_action_probs = log_action_probs.sum(1, keepdim=True)
 
         return actions, action_probs, log_action_probs
 

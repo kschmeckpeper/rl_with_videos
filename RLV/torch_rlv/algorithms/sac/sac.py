@@ -17,29 +17,30 @@ class SAC:
         self.best_score = env.reward_range[0]
         self.score_history = []
 
-    def run(self,  cnt=-1, plot=False):
+    def run(self, cnt=-1, plot=False):
 
         if self.load_checkpoint:
             self.agent.load_models()
             self.env.render(mode='human')
 
         obs = self.env.reset()
-        acts = []
         for _ in range(self.pre_steps):
             action = self.env.action_space.sample()
-            acts.append(action)
+            action = np.eye(self.env.action_space.n)[action]
             obs_, reward, done, info = self.env.step(action)
             self.agent.remember(obs, action, reward, obs_, done)
             obs = obs_
+        acts = []
         for i in range(self.n_games):
             observation = self.env.reset()
             done = False
             score = 0
-            for _ in range(100):
+            while not done:
                 action = self.agent.choose_action(observation)
+                acts.append(action)
                 observation_, reward, done, info = self.env.step(action)
                 score += reward
-                self.agent.remember(observation, action, reward, observation_, done)
+                self.agent.remember(observation, np.eye(self.env.action_space.n)[action], reward, observation_, done)
                 if not self.load_checkpoint:
                     self.agent.learn()
                 observation = observation_

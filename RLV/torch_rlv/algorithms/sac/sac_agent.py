@@ -14,14 +14,14 @@ def get_agent(env, action_space_type, experiment):
                      layer2_size=experiment.layer2_size)
 
     if action_space_type == "discrete":
-        return AgentDiscrete( alpha=experiment.lr, beta=experiment.lr,
+        return AgentDiscrete(alpha=experiment.lr, beta=experiment.lr,
                              input_dims=env.observation_space.shape, env=env,
                              n_actions=env.action_space.n, layer1_size=experiment.layer1_size,
                              layer2_size=experiment.layer2_size)
 
 
 class Agent:
-    def __init__(self, action_space="continuous", alpha=0.0003, beta=0.0003, input_dims=None,
+    def __init__(self, alpha=0.0003, beta=0.0003, input_dims=None,
                  env=None, gamma=0.99, n_actions=2, max_size=1000000, tau=0.005,
                  layer1_size=256, layer2_size=256, batch_size=256, reward_scale=2):
         if input_dims is None:
@@ -33,9 +33,9 @@ class Agent:
         self.batch_size = batch_size
         self.n_actions = n_actions
 
-        self.actor = ActorNetworkDiscrete(alpha, input_dims, n_actions=n_actions, fc1_dims=layer1_size,
-                                          fc2_dims=layer2_size,
-                                          name='actor_discrete', max_action=env.action_space.high)
+        self.actor = ActorNetwork(alpha, input_dims, n_actions=n_actions, fc1_dims=layer1_size,
+                                  fc2_dims=layer2_size,
+                                  name='actor_discrete', max_action=env.action_space.high)
         self.critic_1 = CriticNetwork(beta, input_dims, n_actions=n_actions, fc1_dims=layer1_size, fc2_dims=layer2_size,
                                       name='critic_1')
         self.critic_2 = CriticNetwork(beta, input_dims, n_actions=n_actions, fc1_dims=layer1_size, fc2_dims=layer2_size,
@@ -150,22 +150,26 @@ class Agent:
 
 class AgentDiscrete:
     def __init__(self, alpha=0.0003, beta=0.0003, input_dims=None,
-                 env=None, gamma=0.99, n_actions=1, max_size=1000000, tau=0.005,
+                 env=None, gamma=0.99, n_actions=3, max_size=1000000, tau=0.005,
                  layer1_size=256, layer2_size=256, batch_size=256, reward_scale=2):
         if input_dims is None:
-            input_dims = [1]
+            input_dims = [3]
         self.gamma = gamma
         self.tau = tau
         self.memory = ReplayBuffer(max_size, input_dims, n_actions)
         self.memory_action_free = ActionFreeReplayBuffer(max_size, input_dims, 1)
         self.batch_size = batch_size
-        self.n_actions = n_actions
+        if env is None:
+            self.n_actions = n_actions
+        else:
+            self.n_actions = env.action_space.n
 
-        self.actor = ActorNetworkDiscrete(alpha, input_dims, n_actions=1, fc1_dims=layer1_size,
-                                          fc2_dims=layer2_size, name='actor_discrete', max_action=env.action_space.n-1)
-        self.critic_1 = CriticNetwork(beta, input_dims, n_actions=1, fc1_dims=layer1_size, fc2_dims=layer2_size,
+        self.actor = ActorNetworkDiscrete(alpha, input_dims, n_actions=n_actions, fc1_dims=layer1_size,
+                                          fc2_dims=layer2_size, name='actor_discrete',
+                                          max_action=env.action_space.n - 1)
+        self.critic_1 = CriticNetwork(beta, input_dims, n_actions=n_actions, fc1_dims=layer1_size, fc2_dims=layer2_size,
                                       name='critic_1')
-        self.critic_2 = CriticNetwork(beta, input_dims, n_actions=1, fc1_dims=layer1_size, fc2_dims=layer2_size,
+        self.critic_2 = CriticNetwork(beta, input_dims, n_actions=n_actions, fc1_dims=layer1_size, fc2_dims=layer2_size,
                                       name='critic_2')
         self.value = ValueNetwork(beta, input_dims, fc1_dims=layer1_size, fc2_dims=layer2_size, name='value')
         self.target_value = ValueNetwork(beta, input_dims, fc1_dims=layer1_size, fc2_dims=layer2_size,
@@ -177,8 +181,8 @@ class AgentDiscrete:
     def choose_action(self, observation):
         state = T.Tensor([observation]).to(self.actor.device)
         actions, _, _ = self.actor.sample(state)
-
-        return np.max(actions.cpu().detach().numpy()[0])
+        np_action = actions.cpu().detach().numpy()
+        return np.where(np_action[0] == 1)[0][0]
 
     def remember(self, state, action, reward, new_state, done):
         self.memory.store_transition(state, action, reward, new_state, done)
@@ -229,12 +233,12 @@ class AgentDiscrete:
         state_ = T.tensor(new_state, dtype=T.float).to(self.actor.device)
         state = T.tensor(state, dtype=T.float).to(self.actor.device)
         action = T.tensor(action, dtype=T.float).to(self.actor.device)
-        action = T.narrow(action, 1, 0, 1)
         value = self.value(state).view(-1)
         value_ = self.target_value(state_).view(-1)
         value_[done] = 0.0
 
-        actions, _, log_probs = self.actor.sample(state)
+        actions, act_probs, log_probs = self.actor.sample(state)
+        act_probs = act_probs.view(-1)
         log_probs = log_probs.view(-1)
         q1_new_policy = self.critic_1.forward(state, actions)
         q2_new_policy = self.critic_2.forward(state, actions)
@@ -242,12 +246,12 @@ class AgentDiscrete:
         critic_value = critic_value.view(-1)
 
         self.value.optimizer.zero_grad()
-        value_target = log_probs.T @ (critic_value - log_probs)
+        value_target = act_probs.T * (critic_value - log_probs)
         value_loss = 0.5 * F.mse_loss(value, value_target)
         value_loss.backward(retain_graph=True)
         self.value.optimizer.step()
 
-        actor_loss = log_probs.T @ (log_probs - critic_value)
+        actor_loss = act_probs.T * (log_probs - critic_value)
         actor_loss = T.mean(actor_loss)
         self.actor.optimizer.zero_grad()
         actor_loss.backward(retain_graph=True)
