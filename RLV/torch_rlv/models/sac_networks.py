@@ -161,6 +161,7 @@ class ActorNetworkDiscrete(nn.Module):
         self.fc1 = nn.Linear(*self.input_dims, self.fc1_dims)
         self.fc2 = nn.Linear(self.fc1_dims, self.fc2_dims)
         self.probs = nn.Linear(self.fc2_dims, self.n_actions)
+        self.softmax = nn.Softmax(dim=1)
 
         self.optimizer = optim.Adam(self.parameters(), lr=alpha)
         self.device = 'cpu'
@@ -175,12 +176,13 @@ class ActorNetworkDiscrete(nn.Module):
 
         act_prob = self.probs(prob)
         act_prob = T.clamp(act_prob, min=self.reparam_noise, max=1)
+        act_sm = self.softmax(act_prob)
 
-        return act_prob
+        return act_sm
 
     def sample(self, state):
         action_probs = self.forward(state)
-        action_dist = Categorical(action_probs)
+        action_dist = Categorical(probs=action_probs)
 
         actions = action_dist.sample()
         actions = F.one_hot(actions.clone().detach(), num_classes=self.n_actions)

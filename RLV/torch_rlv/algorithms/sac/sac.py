@@ -52,8 +52,7 @@ class SAC:
                 if not self.load_checkpoint:
                     self.agent.save_models()
             if cnt != -1:
-                print('episode ', cnt, ' score %.1f' % score, ' avg_score %.1f' % avg_score)
-                return
+                i = cnt
             print('episode ', i, ' score %.1f' % score, ' avg_score %.1f' % avg_score)
 
         if plot:
