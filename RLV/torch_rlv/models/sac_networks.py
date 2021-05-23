@@ -25,7 +25,7 @@ class CriticNetwork(nn.Module):
         self.q = nn.Linear(self.fc2_dims, 1)
 
         self.optimizer = optim.Adam(self.parameters(), lr=beta)
-        self.device = 'cpu'
+        self.device = T.device('cuda:0' if T.cuda.is_available() else 'cpu')
 
         self.to(self.device)
 
@@ -63,7 +63,7 @@ class ValueNetwork(nn.Module):
         self.v = nn.Linear(self.fc2_dims, 1)
 
         self.optimizer = optim.Adam(self.parameters(), lr=beta)
-        self.device = 'cpu'
+        self.device = T.device('cuda:0' if T.cuda.is_available() else 'cpu')
 
         self.to(self.device)
 
@@ -104,7 +104,7 @@ class ActorNetwork(nn.Module):
         self.sigma = nn.Linear(self.fc2_dims, self.n_actions)
 
         self.optimizer = optim.Adam(self.parameters(), lr=alpha)
-        self.device = 'cpu'
+        self.device = T.device('cuda:0' if T.cuda.is_available() else 'cpu')
 
         self.to(self.device)
 
@@ -146,7 +146,7 @@ class ActorNetwork(nn.Module):
 
 class ActorNetworkDiscrete(nn.Module):
     def __init__(self, alpha, input_dims, max_action, fc1_dims=256,
-                 fc2_dims=256, n_actions=2, name='actor_discr', chkpt_dir='tmp/sac'):
+                 fc2_dims=256, n_actions=3, name='actor_discr', chkpt_dir='tmp/sac'):
         super(ActorNetworkDiscrete, self).__init__()
         self.input_dims = input_dims
         self.fc1_dims = fc1_dims
@@ -164,7 +164,7 @@ class ActorNetworkDiscrete(nn.Module):
         self.softmax = nn.Softmax(dim=1)
 
         self.optimizer = optim.Adam(self.parameters(), lr=alpha)
-        self.device = 'cpu'
+        self.device = T.device('cuda:0' if T.cuda.is_available() else 'cpu')
 
         self.to(self.device)
 

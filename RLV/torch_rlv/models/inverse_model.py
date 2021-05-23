@@ -26,7 +26,7 @@ class InverseModelNetwork(nn.Module):
 
         self.optimizer = optim.Adam(self.parameters(), lr=beta)
         self.criterion = nn.MSELoss()
-        self.device = 'cpu'
+        self.device = T.device('cuda:0' if T.cuda.is_available() else 'cpu')
 
     def forward(self, x):
         x = F.relu(self.fc1(x))
