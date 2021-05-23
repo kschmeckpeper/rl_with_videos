@@ -3,7 +3,7 @@ from .. import utils
 
 
 class SAC:
-    def __init__(self, env_name, env, agent, n_games=250, load_checkpoint=False, pre_steps=0):
+    def __init__(self, env_name, env, agent, n_games=2500, load_checkpoint=False, pre_steps=100, score_history=[]):
         super(SAC, self).__init__()
         self.env = env
         self.agent = agent
@@ -15,7 +15,7 @@ class SAC:
         self.figure_file = 'output/plots/' + self.filename
 
         self.best_score = env.reward_range[0]
-        self.score_history = []
+        self.score_history = score_history
 
     def run(self, cnt=-1, plot=False):
 
@@ -26,18 +26,16 @@ class SAC:
         obs = self.env.reset()
         for _ in range(self.pre_steps):
             action = self.env.action_space.sample()
-            action = np.eye(self.env.action_space.n)[action]
             obs_, reward, done, info = self.env.step(action)
+            action = np.eye(self.env.action_space.n)[action]
             self.agent.remember(obs, action, reward, obs_, done)
             obs = obs_
-        acts = []
         for i in range(self.n_games):
             observation = self.env.reset()
             done = False
             score = 0
             while not done:
                 action = self.agent.choose_action(observation)
-                acts.append(action)
                 observation_, reward, done, info = self.env.step(action)
                 score += reward
                 self.agent.remember(observation, np.eye(self.env.action_space.n)[action], reward, observation_, done)
@@ -59,3 +57,6 @@ class SAC:
             if not self.load_checkpoint:
                 x = [i + 1 for i in range(self.n_games)]
                 utils.plot_learning_curve(x, self.score_history, self.figure_file)
+
+    def get_score_history(self):
+        return self.score_history

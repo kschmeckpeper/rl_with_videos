@@ -16,11 +16,13 @@ class RLV:
         super(RLV, self).__init__()
         self.env_name = env_name
         self.env = env
+        self.score_history = []
         self.agent = agent
         self.inverse_model = InverseModelNetwork(beta=0.0003, input_dims=6)
         self.iterations = 500  # TODO
 
     def run(self):
+        p_steps = 100
         for x in range(0, self.iterations):
             observation = self.env.reset()
             for _ in range(0, self.agent.batch_size):
@@ -48,15 +50,18 @@ class RLV:
 
             done_obs = np.reshape(done_obs, (256, 1))
 
-            action_obs = action_obs_t.detach().numpy()
+            action_obs = T.argmax(action_obs_t, dim=1).detach().numpy()
 
             for ___ in range(0, self.agent.batch_size):
                 self.agent.remember(state_obs[___], action_obs[___],
                                     reward_obs[___], next_state_obs[___], done_obs[___])
 
             s = SAC(env_name=self.env_name, env=self.env, agent=self.agent,
-                    n_games=1, pre_steps=0)
+                    n_games=1, pre_steps=p_steps, score_history=self.score_history)
             s.run(cnt=x)
+            self.score_history = s.get_score_history()
+            p_steps = 0
+
 
             target_t = T.from_numpy(target).float()
             self.inverse_model.optimizer.zero_grad()

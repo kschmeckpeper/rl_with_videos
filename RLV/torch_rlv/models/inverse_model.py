@@ -15,6 +15,7 @@ class InverseModelNetwork(nn.Module):
         self.fc1_dims = fc1_dims
         self.fc2_dims = fc2_dims
         self.fc3_dims = fc3_dims
+        self.softmax = nn.Softmax(dim=1)
         self.name = name
         self.checkpoint_dir = chkpt_dir
         self.checkpoint_file = os.path.join(self.checkpoint_dir, name + '_inverse')
@@ -23,18 +24,16 @@ class InverseModelNetwork(nn.Module):
         self.fc2 = nn.Linear(self.fc1_dims, self.fc2_dims)
         self.fc3 = nn.Linear(self.fc2_dims, self.fc3_dims)
         self.q = nn.Linear(self.fc3_dims, output_dims)
-
         self.optimizer = optim.Adam(self.parameters(), lr=beta)
         self.criterion = nn.MSELoss()
-        self.device = T.device('cuda:0' if T.cuda.is_available() else 'cpu')
+        self.device = 'cpu'
 
     def forward(self, x):
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
         x = F.relu(self.fc3(x))
-
         q = self.q(x)
-
+        q = self.softmax(q)
         return q
 
     def save_checkpoint(self):

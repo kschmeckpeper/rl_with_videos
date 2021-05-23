@@ -1,19 +1,12 @@
----
-name: "SLURM"   # MUST BE "SLURM", is used for communicating with the cluster scheduler
-
-# Required
-partition: "single"
-job-name: "i3rl"    # this will be the experiments name in slurm
-
-# Required - Cluster Specific. These defaults almost always work
-num_parallel_jobs: 99
-ntasks: 1
-cpus-per-task: 8
-mem-per-cpu: 8000
-time: 1440  # in minutes
-
-sbatch_args:    # Dictionary of SBATCH keywords and arguments
-  distribution: cyclic  # To have repetitions of the same exp be distributed to different CPU nodes
+# Slurm bwuni cpu
+name: "SLURM"   # MUST BE "SLURM"
+partition: 'dev_multiple_e'
+job-name: "sac_rlv"# this will be the experiment's name in slurm
+num_parallel_jobs: 1 # max number of jobs executed in parallel
+mem: 10000
+nodes: 8
+ntasks-per-node: 28
+time: 30   # in minutes
 
 ---
 # DEFAULT parameters (Optional)
@@ -29,23 +22,23 @@ params:
   action_space_type: 'discrete'
   env_name: 'acrobot'
   algo_name: 'sac'
-  n_actions: 250
-  pre_steps: 1000
+  n_actions: 2500
+  pre_steps: 100
   layer1_size: 256
   layer2_size: 256
   lr: 0.003
 
 ---
-name: "my_run"
+name: "rlv"
 path: "./output/"
 repetitions: 1   # repeat 8 times
 
 params:
   action_space_type: 'discrete'
   env_name: 'acrobot'
-  algo_name: 'sac'
+  algo_name: 'rlv'
   n_games: 5000
-  pre_steps: 0
+  pre_steps: 100
   layer1_size: 256
   layer2_size: 256
   lr: 0.003

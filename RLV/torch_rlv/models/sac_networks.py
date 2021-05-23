@@ -25,7 +25,7 @@ class CriticNetwork(nn.Module):
         self.q = nn.Linear(self.fc2_dims, 1)
 
         self.optimizer = optim.Adam(self.parameters(), lr=beta)
-        self.device = T.device('cuda:0' if T.cuda.is_available() else 'cpu')
+        self.device = 'cpu'
 
         self.to(self.device)
 
@@ -63,7 +63,7 @@ class ValueNetwork(nn.Module):
         self.v = nn.Linear(self.fc2_dims, 1)
 
         self.optimizer = optim.Adam(self.parameters(), lr=beta)
-        self.device = T.device('cuda:0' if T.cuda.is_available() else 'cpu')
+        self.device = 'cpu'
 
         self.to(self.device)
 
@@ -104,7 +104,7 @@ class ActorNetwork(nn.Module):
         self.sigma = nn.Linear(self.fc2_dims, self.n_actions)
 
         self.optimizer = optim.Adam(self.parameters(), lr=alpha)
-        self.device = T.device('cuda:0' if T.cuda.is_available() else 'cpu')
+        self.device = 'cpu'
 
         self.to(self.device)
 
@@ -164,7 +164,7 @@ class ActorNetworkDiscrete(nn.Module):
         self.softmax = nn.Softmax(dim=1)
 
         self.optimizer = optim.Adam(self.parameters(), lr=alpha)
-        self.device = T.device('cuda:0' if T.cuda.is_available() else 'cpu')
+        self.device = 'cpu'
 
         self.to(self.device)
 
