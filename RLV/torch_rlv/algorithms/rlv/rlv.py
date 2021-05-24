@@ -66,7 +66,6 @@ class RLV:
             target_t = T.from_numpy(target).float()
             self.inverse_model.optimizer.zero_grad()
             loss = self.inverse_model.criterion(action_obs_t, target_t)
-            print(target_t)
             print(f"Iteration: {x} - Loss Inverse Model: {loss}")
             loss.backward()
             self.inverse_model.optimizer.step()
