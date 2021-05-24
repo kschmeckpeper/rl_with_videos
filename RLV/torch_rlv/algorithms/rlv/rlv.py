@@ -56,16 +56,17 @@ class RLV:
                 self.agent.remember(state_obs[___], action_obs[___],
                                     reward_obs[___], next_state_obs[___], done_obs[___])
 
-            s = SAC(env_name=self.env_name, env=self.env, agent=self.agent,
-                    n_games=1, pre_steps=p_steps, score_history=self.score_history)
-            s.run(cnt=x)
-            self.score_history = s.get_score_history()
+            # s = SAC(env_name=self.env_name, env=self.env, agent=self.agent,
+            #         n_games=1, pre_steps=p_steps, score_history=self.score_history)
+            # s.run(cnt=x)
+            #self.score_history = s.get_score_history()
             p_steps = 0
 
 
             target_t = T.from_numpy(target).float()
             self.inverse_model.optimizer.zero_grad()
             loss = self.inverse_model.criterion(action_obs_t, target_t)
+            print(target_t)
             print(f"Iteration: {x} - Loss Inverse Model: {loss}")
             loss.backward()
             self.inverse_model.optimizer.step()
