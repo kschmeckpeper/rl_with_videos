@@ -180,7 +180,7 @@ class AgentDiscrete:
     def choose_action(self, observation):
         state = T.Tensor([observation]).to(self.actor.device)
         actions, _, _ = self.actor.sample(state)
-        np_action = actions.cpu().detach().numpy()
+        np_action = actions.gpu().detach().numpy()
         return np.where(np_action[0] == 1)[0][0]
 
     def remember(self, state, action, reward, new_state, done):

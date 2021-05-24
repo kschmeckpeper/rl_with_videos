@@ -56,10 +56,10 @@ class RLV:
                 self.agent.remember(state_obs[___], action_obs[___],
                                     reward_obs[___], next_state_obs[___], done_obs[___])
 
-            # s = SAC(env_name=self.env_name, env=self.env, agent=self.agent,
-            #         n_games=1, pre_steps=p_steps, score_history=self.score_history)
-            # s.run(cnt=x)
-            #self.score_history = s.get_score_history()
+            s = SAC(env_name=self.env_name, env=self.env, agent=self.agent,
+                    n_games=1, pre_steps=p_steps, score_history=self.score_history)
+            s.run(cnt=x)
+            self.score_history = s.get_score_history()
             p_steps = 0
 
 
