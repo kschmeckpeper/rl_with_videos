@@ -90,11 +90,18 @@ class Agent:
         self.critic_1.load_checkpoint()
         self.critic_2.load_checkpoint()
 
-    def learn(self):
+    def learn(self, mixed_pool=None):
         if self.memory.mem_cntr < self.batch_size:
             return
 
-        state, action, reward, new_state, done = self.memory.sample_buffer(self.batch_size)
+        if mixed_pool is None:
+            state, action, reward, new_state, done = self.memory.sample_buffer(self.batch_size)
+        else:
+            state = mixed_pool['state']
+            action = mixed_pool['action']
+            reward = mixed_pool['reward']
+            new_state = mixed_pool['next_state']
+            done = mixed_pool['done_obs']
 
         reward = T.tensor(reward, dtype=T.float).to(self.actor.device)
         done = T.tensor(done).to(self.actor.device)
@@ -221,11 +228,18 @@ class AgentDiscrete:
         self.critic_1.load_checkpoint()
         self.critic_2.load_checkpoint()
 
-    def learn(self):
+    def learn(self, mixed_pool=None):
         if self.memory.mem_cntr < self.batch_size:
             return
 
-        state, action, reward, new_state, done = self.memory.sample_buffer(self.batch_size)
+        if mixed_pool is None:
+            state, action, reward, new_state, done = self.memory.sample_buffer(self.batch_size)
+        else:
+            state = mixed_pool['state']
+            action = mixed_pool['action']
+            reward = mixed_pool['reward']
+            new_state = mixed_pool['next_state']
+            done = mixed_pool['done_obs']
 
         reward = T.tensor(reward, dtype=T.float).to(self.actor.device)
         done = T.tensor(done).to(self.actor.device)

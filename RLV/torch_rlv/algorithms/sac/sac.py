@@ -4,7 +4,7 @@ from .. import utils
 
 class SAC:
     def __init__(self, env_name, env, agent, n_games=2500, load_checkpoint=False, pre_steps=100,
-                 score_history=[], observational_batch=None):
+                 score_history=None, observational_batch=None, memory_mixed=False, additional_data=None):
         super(SAC, self).__init__()
         self.env = env
         self.agent = agent
@@ -13,6 +13,8 @@ class SAC:
         self.n_games = n_games
         self.load_checkpoint = load_checkpoint
         self.filename = env_name + '.png'
+        self.mem_mixed = memory_mixed
+        self.additional_data = additional_data
 
         self.figure_file = 'output/plots/' + self.filename
 
@@ -40,9 +42,10 @@ class SAC:
                 action = self.agent.choose_action(observation)
                 observation_, reward, done, info = self.env.step(action)
                 score += reward
-                self.agent.remember(observation, np.eye(self.env.action_space.n)[action], reward, observation_, done)
+                if not self.mem_mixed:
+                    self.agent.remember(observation, np.eye(self.env.action_space.n)[action], reward, observation_, done)
                 if not self.load_checkpoint:
-                    self.agent.learn()
+                    self.agent.learn(mixed_pool=self.additional_data)
                 observation = observation_
             self.score_history.append(score)
             avg_score = np.mean(self.score_history[-100:])
