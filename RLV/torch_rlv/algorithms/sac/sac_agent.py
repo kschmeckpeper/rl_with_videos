@@ -94,14 +94,14 @@ class Agent:
         if self.memory.mem_cntr < self.batch_size:
             return
 
-        if mixed_pool is None:
-            state, action, reward, new_state, done = self.memory.sample_buffer(self.batch_size)
-        else:
-            state = mixed_pool['state']
-            action = mixed_pool['action']
-            reward = mixed_pool['reward']
-            new_state = mixed_pool['next_state']
-            done = mixed_pool['done_obs']
+        state, action, reward, new_state, done = self.memory.sample_buffer(self.batch_size)
+
+        if mixed_pool is not None:
+            state = np.concatenate(state, mixed_pool['state'], )
+            action = np.concatenate(action, mixed_pool['action'])
+            reward = np.concatenate(reward, mixed_pool['reward'])
+            new_state = np.concatenate(new_state, mixed_pool['next_state'])
+            done = np.concatenate(done, mixed_pool['done_obs'])
 
         reward = T.tensor(reward, dtype=T.float).to(self.actor.device)
         done = T.tensor(done).to(self.actor.device)
