@@ -3,11 +3,13 @@ from .. import utils
 
 
 class SAC:
-    def __init__(self, env_name, env, agent, n_games=2500, load_checkpoint=False, pre_steps=100, score_history=[]):
+    def __init__(self, env_name, env, agent, n_games=2500, load_checkpoint=False, pre_steps=100,
+                 score_history=[], observational_batch=None):
         super(SAC, self).__init__()
         self.env = env
         self.agent = agent
         self.pre_steps = pre_steps
+        self.observational_batch = observational_batch
         self.n_games = n_games
         self.load_checkpoint = load_checkpoint
         self.filename = env_name + '.png'

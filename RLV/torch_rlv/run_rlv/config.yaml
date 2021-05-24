@@ -1,13 +1,11 @@
-# Slurm config bwuni gpu
+# Slurm bwuni cpu
 name: "SLURM"   # MUST BE "SLURM"
-partition: "gpu_8"  # "single" for cpu, "gpu_4" or gpu_8" for gpu
-job-name: "test" # this will be the experiment's name in slurm
-num_parallel_jobs: 1  # max number of jobs executed in parallel
+partition: "single"  # "single" for cpu, "gpu_4" or gpu_8" for gpu
+job-name: "test"# this will be the experiment's name in slurm
+num_parallel_jobs: 1 # max number of jobs executed in parallel
 ntasks: 1   #  leave that like it is
-cpus-per-task: 1   # there are 5 cores for each GPU on the gpu_8 queue and 10 per GPU on the gpu_4 queue. Never use 5! don't ask why!
-time: 10   # in minutes
-sbatch_args:   # gpus need to be explicitly requested using this
-  gres: "gpu:1" #and this
+cpus-per-task: 2   # there are 10 cores for each GPU
+time: 120   # in minutes
 
 ---
 # DEFAULT parameters (Optional)
