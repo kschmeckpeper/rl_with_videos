@@ -54,12 +54,11 @@ class RLV:
                                          T.from_numpy(done_obs)), dim=1).float()
 
             action_obs_t = self.inverse_model(input_inverse_model)
-
             reward_obs = np.zeros((self.agent.batch_size, 1))
             for __ in range(0, self.agent.batch_size):
                 reward_obs[__] = set_reward(reward[__])
 
-            action_obs = T.argmax(action_obs_t, dim=1).detach().numpy()
+            action_obs = action_obs_t.detach().numpy()
 
             for ___ in range(0, self.agent.batch_size):
                 self.agent.remember(state_obs[___], action_obs[___],
@@ -75,7 +74,6 @@ class RLV:
             target_t = T.from_numpy(target).float()
             self.inverse_model.optimizer.zero_grad()
             loss = self.inverse_model.criterion(action_obs_t, target_t)
-            print(target_t)
             print(f"Iteration: {x} - Loss Inverse Model: {loss}")
             loss.backward()
             self.inverse_model.optimizer.step()
