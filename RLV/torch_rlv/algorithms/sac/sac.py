@@ -3,12 +3,13 @@ from .. import utils
 
 
 class SAC:
-    def __init__(self, env_name, env, agent, n_games=2500, load_checkpoint=False, pre_steps=100,
+    def __init__(self, env_name, env, agent, n_games=2500, load_checkpoint=False, pre_steps=100, steps=100,
                  score_history=None, observational_batch=None, memory_mixed=False, additional_data=None):
         super(SAC, self).__init__()
         self.env = env
         self.agent = agent
         self.pre_steps = pre_steps
+        self.steps = steps
         self.observational_batch = observational_batch
         self.n_games = n_games
         self.load_checkpoint = load_checkpoint
@@ -38,7 +39,8 @@ class SAC:
             observation = self.env.reset()
             done = False
             score = 0
-            while not done:
+            s = 0
+            while not done and s in range(self.steps):
                 action = self.agent.choose_action(observation)
                 observation_, reward, done, info = self.env.step(action)
                 score += reward
@@ -47,6 +49,7 @@ class SAC:
                 if not self.load_checkpoint:
                     self.agent.learn(mixed_pool=self.additional_data)
                 observation = observation_
+                s += 1
             self.score_history.append(score)
             avg_score = np.mean(self.score_history[-100:])
 
