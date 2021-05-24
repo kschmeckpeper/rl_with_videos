@@ -4,7 +4,7 @@ from .. import utils
 
 class SAC:
     def __init__(self, env_name, env, agent, n_games=2500, load_checkpoint=False, pre_steps=100, steps=100,
-                 score_history=None, observational_batch=None, memory_mixed=False, additional_data=None):
+                 score_history=[], observational_batch=None, memory_mixed=False, additional_data=None):
         super(SAC, self).__init__()
         self.env = env
         self.agent = agent

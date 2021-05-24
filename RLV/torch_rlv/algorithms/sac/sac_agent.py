@@ -232,6 +232,8 @@ class AgentDiscrete:
         if self.memory.mem_cntr < self.batch_size:
             return
 
+        state, action, reward, new_state, done = self.memory.sample_buffer(self.batch_size)
+
         if mixed_pool is not None:
             state = np.concatenate(state, mixed_pool['state'], )
             action = np.concatenate(action, mixed_pool['action'])
