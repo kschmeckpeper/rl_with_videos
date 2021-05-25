@@ -67,7 +67,7 @@ class RLV:
 
             # perform sac based on initial data obtained by environment step plus additional
             # observational data
-            s = SAC(env_name=self.env_name, env=self.env, memory_mixed=True, agent=self.agent,
+            s = SAC(env_name=self.env_name, env=self.env, agent=self.agent,
                     n_games=1, pre_steps=p_steps, score_history=self.score_history,
                     additional_data=observational_batch)
             s.run(cnt=x)

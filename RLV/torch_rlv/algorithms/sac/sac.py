@@ -3,18 +3,18 @@ from .. import utils
 
 
 class SAC:
-    def __init__(self, env_name, env, agent, n_games=2500, load_checkpoint=False, pre_steps=100, steps=100,
-                 score_history=[], observational_batch=None, memory_mixed=False, additional_data=None):
+    def __init__(self, env_name, env, agent, n_games=2500, load_checkpoint=False, steps=100,
+                 pre_steps=100, steps_count=0,
+                 score_history=[], additional_data=None):
         super(SAC, self).__init__()
         self.env = env
         self.agent = agent
         self.pre_steps = pre_steps
         self.steps = steps
-        self.observational_batch = observational_batch
+        self.steps_count = steps_count
         self.n_games = n_games
         self.load_checkpoint = load_checkpoint
         self.filename = env_name + '.png'
-        self.mem_mixed = memory_mixed
         self.additional_data = additional_data
 
         self.figure_file = 'output/plots/' + self.filename
@@ -40,16 +40,16 @@ class SAC:
             done = False
             score = 0
             s = 0
-            while not done and s in range(self.steps):
+            while not done:
                 action = self.agent.choose_action(observation)
                 observation_, reward, done, info = self.env.step(action)
                 score += reward
-                if not self.mem_mixed:
-                    self.agent.remember(observation, np.eye(self.env.action_space.n)[action], reward, observation_, done)
+                self.agent.remember(observation, np.eye(self.env.action_space.n)[action], reward, observation_, done)
                 if not self.load_checkpoint:
                     self.agent.learn(mixed_pool=self.additional_data)
                 observation = observation_
                 s += 1
+            self.steps_count += s
             self.score_history.append(score)
             avg_score = np.mean(self.score_history[-100:])
 
@@ -59,7 +59,8 @@ class SAC:
                     self.agent.save_models()
             if cnt != -1:
                 i = cnt
-            print('episode ', i, ' best score %.1f' % self.best_score, ' score %.1f' % score, ' avg_score %.1f' % avg_score)
+            print('steps', self.steps_count, ' episode ', i, ' best score %.1f' % self.best_score,
+                  ' score %.1f' % score, ' avg_score %.1f' % avg_score)
 
         if plot:
             if not self.load_checkpoint:
