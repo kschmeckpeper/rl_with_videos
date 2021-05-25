@@ -16,6 +16,7 @@ class RLV:
         super(RLV, self).__init__()
         self.env_name = env_name
         self.env = env
+        self.steps_count = 0
         self.score_history = []
         self.agent = agent
         self.inverse_model = InverseModelNetwork(beta=0.0003, input_dims=13)
@@ -69,8 +70,9 @@ class RLV:
             # observational data
             s = SAC(env_name=self.env_name, env=self.env, agent=self.agent,
                     n_games=1, pre_steps=p_steps, score_history=self.score_history,
-                    additional_data=observational_batch)
+                    additional_data=observational_batch, steps_count=self.steps_count)
             s.run(cnt=x)
+            self.steps_count = s.steps_count
             self.score_history = s.get_score_history()
             p_steps = 0
 
