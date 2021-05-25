@@ -97,19 +97,19 @@ class Agent:
         state, action, reward, new_state, done = self.memory.sample_buffer(self.batch_size)
 
         if mixed_pool is not None:
-            state = np.concatenate(state, mixed_pool['state'], )
-            action = np.concatenate(action, mixed_pool['action'])
-            reward = np.concatenate(reward, mixed_pool['reward'])
-            new_state = np.concatenate(new_state, mixed_pool['next_state'])
-            done = np.concatenate(done, mixed_pool['done_obs'])
+            state = np.concatenate((state, mixed_pool['state']))
+            action = np.concatenate((action, mixed_pool['action']))
+            reward = np.concatenate((reward, mixed_pool['reward']))
+            new_state = np.concatenate((new_state, mixed_pool['next_state']))
+            done = np.concatenate((done, mixed_pool['done_obs']))
 
         reward = T.tensor(reward, dtype=T.float).to(self.actor.device)
         done = T.tensor(done).to(self.actor.device)
         state_ = T.tensor(new_state, dtype=T.float).to(self.actor.device)
         state = T.tensor(state, dtype=T.float).to(self.actor.device)
         action = T.tensor(action, dtype=T.float).to(self.actor.device)
-        value = self.value(state).view(-1)
-        value_ = self.target_value(state_).view(-1)
+        print(value.shape)
+        print(value_.shape)
         value_[done] = 0.0
 
         actions, log_probs = self.actor.sample(state, reparameterize=False)
@@ -234,12 +234,15 @@ class AgentDiscrete:
 
         state, action, reward, new_state, done = self.memory.sample_buffer(self.batch_size)
 
+        reward = np.reshape(reward, (256,))
+        done = np.reshape(done, (256,))
+
         if mixed_pool is not None:
-            state = np.concatenate(state, mixed_pool['state'], )
-            action = np.concatenate(action, mixed_pool['action'])
-            reward = np.concatenate(reward, mixed_pool['reward'])
-            new_state = np.concatenate(new_state, mixed_pool['next_state'])
-            done = np.concatenate(done, mixed_pool['done_obs'])
+            state = np.concatenate((state, mixed_pool['state']))
+            action = np.concatenate((action, mixed_pool['action']))
+            reward = np.concatenate((reward, np.reshape(mixed_pool['reward'], (256,))))
+            new_state = np.concatenate((new_state, mixed_pool['next_state']))
+            done = np.concatenate((done, np.reshape(mixed_pool['done_obs'], (256,))))
 
         reward = T.tensor(reward, dtype=T.float).to(self.actor.device)
         done = T.tensor(done).to(self.actor.device)
