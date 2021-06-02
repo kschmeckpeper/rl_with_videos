@@ -6,6 +6,9 @@ num_parallel_jobs: 1 # max number of jobs executed in parallel
 ntasks: 1   #  leave that like it is
 cpus-per-task: 2   # there are 10 cores for each GPU
 time: 120   # in minutes
+mem-per-cpu: 1000 # Optional - Cluster specific
+slurm_log: "./slurmlog/"            # optional. dir in which slurm output and error logs will be saved. Defaults to EXPERIMENTCONFIG.path
+
 
 ---
 # DEFAULT parameters (Optional)
@@ -13,7 +16,7 @@ name: "DEFAULT"   # MUST BE DEFAULT
 
 # Implementation default parameters
 path: "./output/"   # location to save results in
-repetitions: 1   # number of times one set of parameters is run
+repetitions: 1  # number of times one set of parameters is run
 
 params:
   # this is where you specify all parameters needed for your experiment.
@@ -35,7 +38,7 @@ repetitions: 1   # repeat 8 times
 params:
   action_space_type: 'discrete'
   env_name: 'acrobot'
-  algo_name: 'rlv'
+  algo_name: 'sac'
   n_games: 5000
   pre_steps: 100
   layer1_size: 256

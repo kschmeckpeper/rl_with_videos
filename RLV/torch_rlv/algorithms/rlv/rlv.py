@@ -12,15 +12,16 @@ def set_reward(reward):
 
 
 class RLV:
-    def __init__(self, env_name, env, agent):
+    def __init__(self, env_name, env, agent, iterations=500, warm_up_steps=500):
         super(RLV, self).__init__()
         self.env_name = env_name
         self.env = env
         self.steps_count = 0
+        self.warmup_steps = warm_up_steps
         self.score_history = []
         self.agent = agent
         self.inverse_model = InverseModelNetwork(beta=0.0003, input_dims=13)
-        self.iterations = 500  # TODO
+        self.iterations = iterations  # TODO
 
     def fill_action_free_buffer_acrobot(self):
         observation = self.env.reset()
@@ -35,10 +36,35 @@ class RLV:
             else:
                 observation = observation_
 
+    def warmup_inverse_model(self, warmup_steps):
+        for x in range(0, warmup_steps):
+            state_obs, target, reward, next_state_obs, done_obs \
+                = self.agent.memory_action_free.sample_buffer(self.agent.batch_size)
+            done_obs = np.reshape(done_obs, (256, 1))
+
+            # get actions and rewards for observational data
+            input_inverse_model = T.cat((T.from_numpy(state_obs), T.from_numpy(next_state_obs),
+                                         T.from_numpy(done_obs)), dim=1).float()
+
+            action_obs_t = self.inverse_model(input_inverse_model)
+            reward_obs = np.zeros((self.agent.batch_size, 1))
+            for __ in range(0, self.agent.batch_size):
+                reward_obs[__] = set_reward(reward[__])
+
+            # Update Inverse Model
+            target_t = T.from_numpy(target).float()
+            self.inverse_model.optimizer.zero_grad()
+            loss = self.inverse_model.criterion(action_obs_t, target_t)
+            print(f"Warmup Step: {x} - Loss Inverse Model: {loss}")
+            loss.backward()
+            self.inverse_model.optimizer.step()
+
     def run(self):
         p_steps = 100
         for _ in range(0, self.iterations):
             self.fill_action_free_buffer_acrobot()
+
+        self.warmup_inverse_model(warmup_steps=self.warmup_steps)
 
         for x in range(0, self.iterations):
             state_obs, target, reward, next_state_obs, done_obs \
