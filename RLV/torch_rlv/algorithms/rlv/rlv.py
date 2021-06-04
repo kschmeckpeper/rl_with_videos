@@ -103,8 +103,9 @@ class RLV:
             algorithm.run(cnt=x)
             self.steps_count = algorithm.get_step_count()
             self.score_history = algorithm.get_score_history()
-            env_step = algorithm.get_env_state()
-            plot_env_step(env_step, self.steps_count, 'output/videos/RLV_' + self.env_name)
+            if plot:
+                env_step = algorithm.get_env_state()
+                plot_env_step(env_step, self.steps_count, 'output/videos/RLV_' + self.env_name)
             p_steps = 0
 
             # Update Inverse Model
