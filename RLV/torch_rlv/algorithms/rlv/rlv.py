@@ -1,6 +1,7 @@
 import torch as T
 from RLV.torch_rlv.models.inverse_model import InverseModelNetwork
 from RLV.torch_rlv.algorithms.sac.sac import SAC
+from RLV.torch_rlv.visualizer.plot import plot_learning_curve, plot_env_step
 import numpy as np
 
 
@@ -22,8 +23,10 @@ class RLV:
         self.agent = agent
         self.inverse_model = InverseModelNetwork(beta=0.0003, input_dims=13)
         self.iterations = iterations  # TODO
+        self.filename = env_name + '.png'
+        self.figure_file = 'output/plots/SAC' + self.filename
 
-    def fill_action_free_buffer_acrobot(self):
+    def fill_action_free_buffer(self):
         observation = self.env.reset()
         for _ in range(0, self.agent.batch_size):
             act = self.agent.choose_action(observation)
@@ -59,10 +62,10 @@ class RLV:
             loss.backward()
             self.inverse_model.optimizer.step()
 
-    def run(self):
+    def run(self, plot=False):
         p_steps = 100
         for _ in range(0, self.iterations):
-            self.fill_action_free_buffer_acrobot()
+            self.fill_action_free_buffer()
 
         self.warmup_inverse_model(warmup_steps=self.warmup_steps)
 
@@ -94,12 +97,14 @@ class RLV:
 
             # perform sac based on initial data obtained by environment step plus additional
             # observational data
-            s = SAC(env_name=self.env_name, env=self.env, agent=self.agent,
-                    n_games=1, pre_steps=p_steps, score_history=self.score_history,
-                    additional_data=observational_batch, steps_count=self.steps_count)
-            s.run(cnt=x)
-            self.steps_count = s.steps_count
-            self.score_history = s.get_score_history()
+            algorithm = SAC(env_name=self.env_name, env=self.env, agent=self.agent,
+                            n_games=1, pre_steps=p_steps, score_history=self.score_history,
+                            additional_data=observational_batch, steps_count=self.steps_count)
+            algorithm.run(cnt=x)
+            self.steps_count = algorithm.get_step_count()
+            self.score_history = algorithm.get_score_history()
+            env_step = algorithm.get_env_state()
+            plot_env_step(env_step, self.steps_count, 'output/videos/RLV_' + self.env_name)
             p_steps = 0
 
             # Update Inverse Model
@@ -109,3 +114,7 @@ class RLV:
             print(f"Iteration: {x} - Loss Inverse Model: {loss}")
             loss.backward()
             self.inverse_model.optimizer.step()
+
+        if plot:
+            x = [i + 1 for i in range(len(self.score_history))]
+            plot_learning_curve(x, self.score_history, self.figure_file)

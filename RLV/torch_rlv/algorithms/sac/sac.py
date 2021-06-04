@@ -1,26 +1,31 @@
 import numpy as np
-from .. import utils
+from RLV.torch_rlv.visualizer.plot import plot_learning_curve, plot_env_step
 
 
 class SAC:
     def __init__(self, env_name, env, agent, n_games=2500, load_checkpoint=False, steps=100,
-                 pre_steps=100, steps_count=0,
-                 score_history=[], additional_data=None):
+                 pre_steps=100, steps_count=0, plot_steps=100,
+                 score_history=None, additional_data=None):
         super(SAC, self).__init__()
+        if score_history is None:
+            score_history = []
+        self.env_name = env_name
         self.env = env
         self.agent = agent
         self.pre_steps = pre_steps
         self.steps = steps
         self.steps_count = steps_count
+        self.plot_steps = plot_steps
         self.n_games = n_games
         self.load_checkpoint = load_checkpoint
         self.filename = env_name + '.png'
         self.additional_data = additional_data
 
-        self.figure_file = 'output/plots/' + self.filename
+        self.figure_file = 'output/plots/SAC' + self.filename
 
         self.best_score = env.reward_range[0]
         self.score_history = score_history
+        self.env_state = None
 
     def run(self, cnt=-1, plot=False):
 
@@ -39,7 +44,7 @@ class SAC:
             observation = self.env.reset()
             done = False
             score = 0
-            s = 0
+            step = 0
             while not done:
                 action = self.agent.choose_action(observation)
                 observation_, reward, done, info = self.env.step(action)
@@ -47,9 +52,14 @@ class SAC:
                 self.agent.remember(observation, np.eye(self.env.action_space.n)[action], reward, observation_, done)
                 if not self.load_checkpoint:
                     self.agent.learn(mixed_pool=self.additional_data)
+                if plot and step % self.plot_steps == 0:
+                    self.env_state = self.env.render(mode='rgb_array')
+                    plot_env_step(self.env_state, step, 'output/videos/SAC_' + self.env_name)
+
                 observation = observation_
-                s += 1
-            self.steps_count += s
+                step += 1
+
+            self.steps_count += step
             self.score_history.append(score)
             avg_score = np.mean(self.score_history[-100:])
 
@@ -64,8 +74,14 @@ class SAC:
 
         if plot:
             if not self.load_checkpoint:
-                x = [i + 1 for i in range(self.n_games)]
-                utils.plot_learning_curve(x, self.score_history, self.figure_file)
+                x = [i + 1 for i in range(self.steps)]
+                plot_learning_curve(x, self.score_history, self.figure_file)
 
     def get_score_history(self):
         return self.score_history
+
+    def get_step_count(self):
+        return self.steps_count
+
+    def get_env_state(self):
+        return self.env_state
