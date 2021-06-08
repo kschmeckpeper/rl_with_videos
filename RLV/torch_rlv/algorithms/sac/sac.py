@@ -1,10 +1,11 @@
 import numpy as np
-from RLV.torch_rlv.visualizer.plot import plot_learning_curve, plot_env_step
+from RLV.torch_rlv.visualizer.plot import plot_learning_curve, plot_env_step, animate_env_obs
+from datetime import datetime
 
 
 class SAC:
     def __init__(self, env_name, env, agent, n_games=2500, load_checkpoint=False, steps=100,
-                 pre_steps=100, steps_count=0, plot_steps=100,
+                 pre_steps=100, steps_count=0, plot_steps=250,
                  score_history=None, additional_data=None):
         super(SAC, self).__init__()
         if score_history is None:
@@ -22,6 +23,7 @@ class SAC:
         self.additional_data = additional_data
 
         self.figure_file = 'output/plots/SAC' + self.filename
+        self.date_time = '[' + datetime.now().strftime("%m/%d/%Y,%H:%M") + ']'
 
         self.best_score = env.reward_range[0]
         self.score_history = score_history
@@ -40,6 +42,7 @@ class SAC:
             action = np.eye(self.env.action_space.n)[action]
             self.agent.remember(obs, action, reward, obs_, done)
             obs = obs_
+        env_obs = []
         for i in range(self.n_games):
             observation = self.env.reset()
             done = False
@@ -52,9 +55,13 @@ class SAC:
                 self.agent.remember(observation, np.eye(self.env.action_space.n)[action], reward, observation_, done)
                 if not self.load_checkpoint:
                     self.agent.learn(mixed_pool=self.additional_data)
-                if plot and step % self.plot_steps == 0:
-                    self.env_state = self.env.render(mode='rgb_array')
-                    plot_env_step(self.env_state, step, 'output/videos/SAC_' + self.env_name)
+
+                if plot:
+                    obs_img = self.env.render(mode='rgb_array')
+                    env_obs.append(obs_img)
+                    if step % self.plot_steps == 0 or done:
+                        self.env_state = obs_img
+                        plot_env_step(self.env_state, step, 'output/videos/SAC_' + self.env_name + self.date_time)
 
                 observation = observation_
                 step += 1
@@ -73,6 +80,7 @@ class SAC:
                   ' score %.1f' % score, ' avg_score %.1f' % avg_score)
 
         if plot:
+            animate_env_obs(env_obs, 'output/videos/SAC_' + self.env_name + self.date_time)
             if not self.load_checkpoint:
                 x = [i + 1 for i in range(self.steps)]
                 plot_learning_curve(x, self.score_history, self.figure_file)
