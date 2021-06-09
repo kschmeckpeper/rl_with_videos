@@ -1,8 +1,9 @@
 import torch as T
 from RLV.torch_rlv.models.inverse_model import InverseModelNetwork
 from RLV.torch_rlv.algorithms.sac.sac import SAC
-from RLV.torch_rlv.visualizer.plot import plot_learning_curve, plot_env_step
+from RLV.torch_rlv.visualizer.plot import plot_learning_curve, plot_env_step, animate_env_obs
 import numpy as np
+from datetime import datetime
 
 
 def set_reward(reward):
@@ -13,7 +14,7 @@ def set_reward(reward):
 
 
 class RLV:
-    def __init__(self, env_name, env, agent, iterations=500, warm_up_steps=500):
+    def __init__(self, env_name, env, agent, iterations=500, warm_up_steps=500, base_algorithm=None):
         super(RLV, self).__init__()
         self.env_name = env_name
         self.env = env
@@ -24,7 +25,9 @@ class RLV:
         self.inverse_model = InverseModelNetwork(beta=0.0003, input_dims=13)
         self.iterations = iterations  # TODO
         self.filename = env_name + '.png'
-        self.figure_file = 'output/plots/SAC' + self.filename
+        self.figure_file = 'output/plots/RLV_' + self.filename
+        self.date_time = '[' + datetime.now().strftime("%m/%d/%Y,%H:%M") + ']'
+        self.algorithm = base_algorithm
 
     def fill_action_free_buffer(self):
         observation = self.env.reset()
@@ -97,15 +100,15 @@ class RLV:
 
             # perform sac based on initial data obtained by environment step plus additional
             # observational data
-            algorithm = SAC(env_name=self.env_name, env=self.env, agent=self.agent,
-                            n_games=1, pre_steps=p_steps, score_history=self.score_history,
-                            additional_data=observational_batch, steps_count=self.steps_count)
-            algorithm.run(cnt=x)
-            self.steps_count = algorithm.get_step_count()
-            self.score_history = algorithm.get_score_history()
+            self.algorithm = SAC(env_name=self.env_name, env=self.env, agent=self.agent,
+                                 n_games=1, pre_steps=p_steps, score_history=self.score_history,
+                                 additional_data=observational_batch, steps_count=self.steps_count)
+            self.algorithm.run(cnt=x)
+            self.steps_count = self.algorithm.get_step_count()
+            self.score_history = self.algorithm.get_score_history()
             if plot:
-                env_step = algorithm.get_env_state()
-                plot_env_step(env_step, self.steps_count, 'output/videos/RLV_' + self.env_name)
+                env_step = self.algorithm.get_env_state()
+                plot_env_step(env_step, self.steps_count, 'output/videos/RLV_' + self.env_name + self.date_time)
             p_steps = 0
 
             # Update Inverse Model
@@ -117,5 +120,7 @@ class RLV:
             self.inverse_model.optimizer.step()
 
         if plot:
+            observations = self.algorithm.get_env_obs()
+            animate_env_obs(observations, 'output/videos/RLV_' + self.env_name + self.date_time)
             x = [i + 1 for i in range(len(self.score_history))]
             plot_learning_curve(x, self.score_history, self.figure_file)

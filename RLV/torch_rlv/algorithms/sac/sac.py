@@ -28,6 +28,7 @@ class SAC:
         self.best_score = env.reward_range[0]
         self.score_history = score_history
         self.env_state = None
+        self.env_obs = []
 
     def run(self, cnt=-1, plot=False):
 
@@ -42,7 +43,7 @@ class SAC:
             action = np.eye(self.env.action_space.n)[action]
             self.agent.remember(obs, action, reward, obs_, done)
             obs = obs_
-        env_obs = []
+
         for i in range(self.n_games):
             observation = self.env.reset()
             done = False
@@ -58,7 +59,7 @@ class SAC:
 
                 if plot:
                     obs_img = self.env.render(mode='rgb_array')
-                    env_obs.append(obs_img)
+                    self.env_obs.append(obs_img)
                     if step % self.plot_steps == 0 or done:
                         self.env_state = obs_img
                         plot_env_step(self.env_state, step, 'output/videos/SAC_' + self.env_name + self.date_time)
@@ -80,7 +81,7 @@ class SAC:
                   ' score %.1f' % score, ' avg_score %.1f' % avg_score)
 
         if plot:
-            animate_env_obs(env_obs, 'output/videos/SAC_' + self.env_name + self.date_time)
+            animate_env_obs(self.env_obs, 'output/videos/SAC_' + self.env_name + self.date_time)
             if not self.load_checkpoint:
                 x = [i + 1 for i in range(self.steps)]
                 plot_learning_curve(x, self.score_history, self.figure_file)
@@ -93,3 +94,6 @@ class SAC:
 
     def get_env_state(self):
         return self.env_state
+
+    def get_env_obs(self):
+        return self.env_obs
