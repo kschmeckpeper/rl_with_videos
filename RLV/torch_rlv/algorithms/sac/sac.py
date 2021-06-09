@@ -82,9 +82,8 @@ class SAC:
 
         if plot:
             animate_env_obs(self.env_obs, 'output/videos/SAC_' + self.env_name + self.date_time)
-            if not self.load_checkpoint:
-                x = [i + 1 for i in range(self.steps)]
-                plot_learning_curve(x, self.score_history, self.figure_file)
+            x = [i + 1 for i in range(self.steps)]
+            plot_learning_curve(x, self.score_history, self.figure_file)
 
     def get_score_history(self):
         return self.score_history
