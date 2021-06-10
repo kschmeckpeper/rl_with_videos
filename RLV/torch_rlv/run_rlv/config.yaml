@@ -2,11 +2,11 @@
 name: "SLURM"   # MUST BE "SLURM"
 partition: "single"  # "single" for cpu, "gpu_4" or gpu_8" for gpu
 job-name: "test"# this will be the experiment's name in slurm
-num_parallel_jobs: 1 # max number of jobs executed in parallel
+num_parallel_jobs: 6 # max number of jobs executed in parallel
 ntasks: 1   #  leave that like it is
-cpus-per-task: 2   # there are 10 cores for each GPU
-time: 120   # in minutes
-mem-per-cpu: 1000 # Optional - Cluster specific
+cpus-per-task: 1   # there are 10 cores for each GPU
+time: 1000   # in minutes
+mem-per-cpu: 64 # Optional - Cluster specific
 slurm_log: "./slurmlog/"            # optional. dir in which slurm output and error logs will be saved. Defaults to EXPERIMENTCONFIG.path
 
 
