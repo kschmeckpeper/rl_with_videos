@@ -26,8 +26,7 @@ params:
   algo_name: 'sac'
   n_actions: 2500
   pre_steps: 100
-  layer1_size: 256
-  layer2_size: 256
+  layers: [256, 256]
   lr: 0.003
 
 ---
@@ -41,6 +40,5 @@ params:
   algo_name: 'sac'
   n_games: 5000
   pre_steps: 100
-  layer1_size: 256
-  layer2_size: 256
+  layers: [256, 256]
   lr: 0.003

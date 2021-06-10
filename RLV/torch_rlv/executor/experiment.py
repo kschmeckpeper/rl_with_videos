@@ -14,8 +14,7 @@ class Experiment:
         self.algo_name = config['algo_name']
         self.n_games = config['n_games']
         self.pre_steps = config['pre_steps']
-        self.layer1_size = config['layer1_size']
-        self.layer2_size = config['layer2_size']
+        self.layers = config['layers']
         self.lr = config['lr']
 
     def run_experiment(self):

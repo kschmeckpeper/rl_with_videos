@@ -9,20 +9,20 @@ def get_agent(env, action_space_type, experiment):
     if action_space_type == "continuous":
         return Agent(alpha=experiment.lr, beta=experiment.lr,
                      input_dims=env.observation_space.shape, env=env,
-                     n_actions=env.action_space.shape[0], layer1_size=experiment.layer1_size,
-                     layer2_size=experiment.layer2_size)
+                     n_actions=env.action_space.shape[0], layers=experiment.layers)
 
     if action_space_type == "discrete":
         return AgentDiscrete(alpha=experiment.lr, beta=experiment.lr,
                              input_dims=env.observation_space.shape, env=env,
-                             n_actions=env.action_space.n, layer1_size=experiment.layer1_size,
-                             layer2_size=experiment.layer2_size)
+                             n_actions=env.action_space.n, layers=experiment.layers)
 
 
 class Agent:
     def __init__(self, alpha=0.0003, beta=0.0003, input_dims=None,
                  env=None, gamma=0.99, n_actions=3, max_size=1000000, tau=0.005,
-                 layer1_size=256, layer2_size=256, batch_size=256, reward_scale=2):
+                 layers=None, batch_size=256, reward_scale=2):
+        if layers is None:
+            layers = [256, 256]
         if input_dims is None:
             input_dims = [1]
         self.gamma = gamma
@@ -32,15 +32,14 @@ class Agent:
         self.batch_size = batch_size
         self.n_actions = n_actions
 
-        self.actor = ActorNetwork(alpha, input_dims, n_actions=n_actions, fc1_dims=layer1_size,
-                                  fc2_dims=layer2_size,
+        self.actor = ActorNetwork(alpha, input_dims, n_actions=n_actions, fc_dims=layers,
                                   name='actor_discrete', max_action=env.action_space.high)
-        self.critic_1 = CriticNetwork(beta, input_dims, n_actions=n_actions, fc1_dims=layer1_size, fc2_dims=layer2_size,
+        self.critic_1 = CriticNetwork(beta, input_dims, n_actions=n_actions, fc_dims=layers,
                                       name='critic_1')
-        self.critic_2 = CriticNetwork(beta, input_dims, n_actions=n_actions, fc1_dims=layer1_size, fc2_dims=layer2_size,
+        self.critic_2 = CriticNetwork(beta, input_dims, n_actions=n_actions, fc_dims=layers,
                                       name='critic_2')
-        self.value = ValueNetwork(beta, input_dims, fc1_dims=layer1_size, fc2_dims=layer2_size, name='value')
-        self.target_value = ValueNetwork(beta, input_dims, fc1_dims=layer1_size, fc2_dims=layer2_size,
+        self.value = ValueNetwork(beta, input_dims, fc_dims=layers, name='value')
+        self.target_value = ValueNetwork(beta, input_dims, fc_dims=layers,
                                          name='target_value')
 
         self.scale = reward_scale
@@ -157,7 +156,9 @@ class Agent:
 class AgentDiscrete:
     def __init__(self, alpha=0.0003, beta=0.0003, input_dims=None,
                  env=None, gamma=0.99, n_actions=3, max_size=1000000, tau=0.005,
-                 layer1_size=256, layer2_size=256, batch_size=256, reward_scale=2):
+                 layers=None, batch_size=256, reward_scale=2):
+        if layers is None:
+            layers = [256, 256]
         if input_dims is None:
             input_dims = [3]
         self.gamma = gamma
@@ -170,15 +171,14 @@ class AgentDiscrete:
         else:
             self.n_actions = env.action_space.n
 
-        self.actor = ActorNetworkDiscrete(alpha, input_dims, n_actions=n_actions, fc1_dims=layer1_size,
-                                          fc2_dims=layer2_size, name='actor_discrete',
-                                          max_action=env.action_space.n - 1)
-        self.critic_1 = CriticNetwork(beta, input_dims, n_actions=n_actions, fc1_dims=layer1_size, fc2_dims=layer2_size,
+        self.actor = ActorNetworkDiscrete(alpha, input_dims, n_actions=n_actions, fc_dims=layers,
+                                          name='actor_discrete', max_action=env.action_space.n - 1)
+        self.critic_1 = CriticNetwork(beta, input_dims, n_actions=n_actions, fc_dims=layers,
                                       name='critic_1')
-        self.critic_2 = CriticNetwork(beta, input_dims, n_actions=n_actions, fc1_dims=layer1_size, fc2_dims=layer2_size,
+        self.critic_2 = CriticNetwork(beta, input_dims, n_actions=n_actions, fc_dims=layers,
                                       name='critic_2')
-        self.value = ValueNetwork(beta, input_dims, fc1_dims=layer1_size, fc2_dims=layer2_size, name='value')
-        self.target_value = ValueNetwork(beta, input_dims, fc1_dims=layer1_size, fc2_dims=layer2_size,
+        self.value = ValueNetwork(beta, input_dims, fc_dims=layers, name='value')
+        self.target_value = ValueNetwork(beta, input_dims, fc_dims=layers,
                                          name='target_value')
 
         self.scale = reward_scale

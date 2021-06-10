@@ -9,22 +9,23 @@ from torch.distributions.categorical import Categorical
 
 
 class CriticNetwork(nn.Module):
-    def __init__(self, beta, input_dims, n_actions, fc1_dims=256, fc2_dims=256, num_layers=2,
+    def __init__(self, beta, input_dims, n_actions, fc_dims=None,
                  name='critic', chkpt_dir='tmp/sac'):
         super(CriticNetwork, self).__init__()
+        if fc_dims is None:
+            fc_dims = [256, 256]
         self.input_dims = input_dims
-        self.fc_dims = fc1_dims
+        self.fc_dims = fc_dims
         self.n_actions = n_actions
-        self.num_layers = num_layers
         self.name = name
         self.checkpoint_dir = chkpt_dir
         self.checkpoint_file = os.path.join(self.checkpoint_dir, name + '_sac')
         x_dim = self.input_dims[0] + n_actions
         self.net = nn.ModuleList()
-        self.net.append(nn.Linear(x_dim, self.fc_dims))
-        for _ in range(self.num_layers-1):
-            self.net.append(nn.Linear(self.fc_dims, self.fc_dims))
-        self.net.append(nn.Linear(self.fc_dims, 1))
+        self.net.append(nn.Linear(x_dim, self.fc_dims[0]))
+        for i in range(1, len(self.fc_dims)):
+            self.net.append(nn.Linear(self.fc_dims[i-1], self.fc_dims[i]))
+        self.net.append(nn.Linear(self.fc_dims[-1], 1))
 
         self.optimizer = optim.Adam(self.net.parameters(), lr=beta)
         self.device = T.device('cuda:0' if T.cuda.is_available() else 'cpu')
@@ -47,22 +48,22 @@ class CriticNetwork(nn.Module):
 
 
 class ValueNetwork(nn.Module):
-    def __init__(self, beta, input_dims, fc1_dims=256, fc2_dims=256, num_layers=2,
+    def __init__(self, beta, input_dims, fc_dims=None,
                  name='value', chkpt_dir='tmp/sac'):
         super(ValueNetwork, self).__init__()
+        if fc_dims is None:
+            fc_dims = [256, 256]
         self.input_dims = input_dims
-        self.fc_dims = fc1_dims
-        self.num_layers = num_layers
-        # self.fc2_dims = fc2_dims
+        self.fc_dims = fc_dims
         self.name = name
         self.checkpoint_dir = chkpt_dir
         self.checkpoint_file = os.path.join(self.checkpoint_dir, name + '_sac')
 
         self.net = nn.ModuleList()
-        self.net.append(nn.Linear(*self.input_dims, self.fc_dims))
-        for _ in range(self.num_layers-1):
-            self.net.append(nn.Linear(self.fc_dims, self.fc_dims))
-        self.net.append(nn.Linear(self.fc_dims, 1))
+        self.net.append(nn.Linear(*self.input_dims, self.fc_dims[0]))
+        for i in range(1, len(self.fc_dims)):
+            self.net.append(nn.Linear(self.fc_dims[i-1], self.fc_dims[i]))
+        self.net.append(nn.Linear(self.fc_dims[-1], 1))
 
         self.optimizer = optim.Adam(self.net.parameters(), lr=beta)
         self.device = T.device('cuda:0' if T.cuda.is_available() else 'cpu')
@@ -85,12 +86,12 @@ class ValueNetwork(nn.Module):
 
 
 class ActorNetwork(nn.Module):
-    def __init__(self, alpha, input_dims, max_action=1, fc1_dims=256, num_layers=2,
-                 fc2_dims=256, n_actions=2, name='actor', chkpt_dir='tmp/sac'):
+    def __init__(self, alpha, input_dims, max_action=1, fc_dims=None, n_actions=2, name='actor', chkpt_dir='tmp/sac'):
         super(ActorNetwork, self).__init__()
+        if fc_dims is None:
+            fc_dims = [256, 256]
         self.input_dims = input_dims
-        self.fc_dims = fc1_dims
-        self.num_layers = num_layers
+        self.fc_dims = fc_dims
         self.n_actions = n_actions
         self.name = name
         self.checkpoint_dir = chkpt_dir
@@ -99,11 +100,11 @@ class ActorNetwork(nn.Module):
         self.reparam_noise = 1e-6
 
         self.net = nn.ModuleList()
-        self.net.append(nn.Linear(*self.input_dims, self.fc_dims))
-        for _ in range(self.num_layers - 1):
-            self.net.append(nn.Linear(self.fc_dims, self.fc_dims))
-        self.net.append(nn.Linear(self.fc_dims, self.n_actions))
-        self.net.append(nn.Linear(self.fc_dims, self.n_actions))
+        self.net.append(nn.Linear(*self.input_dims, self.fc_dims[0]))
+        for i in range(1, len(self.fc_dims)):
+            self.net.append(nn.Linear(self.fc_dims[i-1], self.fc_dims[i]))
+        self.net.append(nn.Linear(self.fc_dims[-1], self.n_actions))
+        self.net.append(nn.Linear(self.fc_dims[-1], self.n_actions))
 
         self.optimizer = optim.Adam(self.net.parameters(), lr=alpha)
         self.device = T.device('cuda:0' if T.cuda.is_available() else 'cpu')
@@ -146,12 +147,13 @@ class ActorNetwork(nn.Module):
 
 
 class ActorNetworkDiscrete(nn.Module):
-    def __init__(self, alpha, input_dims, max_action, fc1_dims=256, num_layers=2,
-                 fc2_dims=256, n_actions=3, name='actor_discr', chkpt_dir='tmp/sac'):
+    def __init__(self, alpha, input_dims, max_action, fc_dims=None, n_actions=3,
+                 name='actor_discr', chkpt_dir='tmp/sac'):
         super(ActorNetworkDiscrete, self).__init__()
+        if fc_dims is None:
+            fc_dims = [256, 256]
         self.input_dims = input_dims
-        self.fc_dims = fc1_dims
-        self.num_layers = num_layers
+        self.fc_dims = fc_dims
         self.n_actions = n_actions
         self.name = name
         self.checkpoint_dir = chkpt_dir
@@ -160,10 +162,10 @@ class ActorNetworkDiscrete(nn.Module):
         self.reparam_noise = 1e-6
 
         self.net = nn.ModuleList()
-        self.net.append(nn.Linear(*self.input_dims, self.fc_dims))
-        for _ in range(self.num_layers - 1):
-            self.net.append(nn.Linear(self.fc_dims, self.fc_dims))
-        self.net.append(nn.Linear(self.fc_dims, self.n_actions))
+        self.net.append(nn.Linear(*self.input_dims, self.fc_dims[0]))
+        for i in range(1, len(self.fc_dims)):
+            self.net.append(nn.Linear(self.fc_dims[i-1], self.fc_dims[i]))
+        self.net.append(nn.Linear(self.fc_dims[-1], self.n_actions))
         self.net.append(nn.Softmax(dim=1))
 
         self.optimizer = optim.Adam(self.net.parameters(), lr=alpha)
