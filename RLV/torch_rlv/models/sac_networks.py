@@ -59,10 +59,10 @@ class ValueNetwork(nn.Module):
         self.checkpoint_file = os.path.join(self.checkpoint_dir, name + '_sac')
 
         self.net = nn.ModuleList()
-        self.net.append(nn.Linear(*self.input_dims, self.fc1_dims))
+        self.net.append(nn.Linear(*self.input_dims, self.fc_dims))
         for _ in range(self.num_layers-1):
             self.net.append(nn.Linear(self.fc_dims, self.fc_dims))
-        self.net.append(nn.Linear(self.fc2_dims, 1))
+        self.net.append(nn.Linear(self.fc_dims, 1))
 
         self.optimizer = optim.Adam(self.net.parameters(), lr=beta)
         self.device = T.device('cuda:0' if T.cuda.is_available() else 'cpu')
