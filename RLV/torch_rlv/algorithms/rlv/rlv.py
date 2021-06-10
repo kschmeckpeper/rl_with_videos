@@ -100,10 +100,15 @@ class RLV:
 
             # perform sac based on initial data obtained by environment step plus additional
             # observational data
-            self.algorithm = SAC(env_name=self.env_name, env=self.env, agent=self.agent,
-                                 n_games=1, pre_steps=p_steps, score_history=self.score_history,
-                                 additional_data=observational_batch, steps_count=self.steps_count)
-            self.algorithm.run(cnt=x)
+
+            if self.algorithm is None:
+                self.algorithm = SAC(env_name=self.env_name, env=self.env, agent=self.agent,
+                                     n_games=1, pre_steps=p_steps, score_history=self.score_history,
+                                     additional_data=observational_batch, steps_count=self.steps_count)
+            if x > 0:
+                self.algorithm.run(cnt=x, execute_pre_steps=False)
+            else:
+                self.algorithm.run(cnt=x)
             self.steps_count = self.algorithm.get_step_count()
             self.score_history = self.algorithm.get_score_history()
             if plot:

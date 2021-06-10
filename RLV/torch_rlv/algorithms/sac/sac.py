@@ -30,19 +30,21 @@ class SAC:
         self.env_state = None
         self.env_obs = []
 
-    def run(self, cnt=-1, plot=False):
+    def run(self, cnt=-1, plot=False, execute_pre_steps=True):
 
         if self.load_checkpoint:
             self.agent.load_models()
             self.env.render(mode='human')
 
         obs = self.env.reset()
-        for _ in range(self.pre_steps):
-            action = self.env.action_space.sample()
-            obs_, reward, done, info = self.env.step(action)
-            action = np.eye(self.env.action_space.n)[action]
-            self.agent.remember(obs, action, reward, obs_, done)
-            obs = obs_
+
+        if execute_pre_steps:
+            for _ in range(self.pre_steps):
+                action = self.env.action_space.sample()
+                obs_, reward, done, info = self.env.step(action)
+                action = np.eye(self.env.action_space.n)[action]
+                self.agent.remember(obs, action, reward, obs_, done)
+                obs = obs_
 
         for i in range(self.n_games):
             observation = self.env.reset()
