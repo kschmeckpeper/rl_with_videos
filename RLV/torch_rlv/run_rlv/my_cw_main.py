@@ -6,7 +6,7 @@ import wandb
 class CustomExperiment(experiment.AbstractExperiment):
 
     def initialize(self, config: dict, rep: int, logger: cw_logging.LoggerArray) -> None:
-        wandb.init(project="my-test-project")
+        wandb.init(project="rlv_2021_test")
         pass
 
     def run(self, config: dict, rep: int, logger: cw_logging.LoggerArray) -> None:

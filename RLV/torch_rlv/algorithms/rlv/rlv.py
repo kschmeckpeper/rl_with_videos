@@ -14,12 +14,12 @@ def set_reward(reward):
 
 
 class RLV:
-    def __init__(self, env_name, env, agent, iterations=500, warm_up_steps=500, base_algorithm=None):
+    def __init__(self, env_name, env, agent, iterations=500, warmup_steps=500, base_algorithm=None):
         super(RLV, self).__init__()
         self.env_name = env_name
         self.env = env
         self.steps_count = 0
-        self.warmup_steps = warm_up_steps
+        self.warmup_steps = warmup_steps
         self.score_history = []
         self.agent = agent
         self.inverse_model = InverseModelNetwork(beta=0.0003, input_dims=13)

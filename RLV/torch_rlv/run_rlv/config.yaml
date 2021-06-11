@@ -1,14 +1,15 @@
-# Slurm bwuni cpu
+# Slurm config bwuni gpu
 name: "SLURM"   # MUST BE "SLURM"
-partition: "single"  # "single" for cpu, "gpu_4" or gpu_8" for gpu
-job-name: "test"# this will be the experiment's name in slurm
-num_parallel_jobs: 6 # max number of jobs executed in parallel
+partition: "gpu_8"  # "single" for cpu, "gpu_4" or gpu_8" for gpu
+job-name: "rlvandsac" # this will be the experiment's name in slurm
+num_parallel_jobs: 8  # max number of jobs executed in parallel
 ntasks: 1   #  leave that like it is
-cpus-per-task: 1   # there are 10 cores for each GPU
-time: 1000   # in minutes
-mem-per-cpu: 64 # Optional - Cluster specific
+cpus-per-task: 1   # there are 5 cores for each GPU on the gpu_8 queue and 10 per GPU on the gpu_4 queue. Never use 5! don't ask why!
+time: 40:00:00
+mem-per-cpu: 90000 # Optional - Cluster specific
+sbatch_args:   # gpus need to be explicitly requested using this
+  gres: "gpu:1" #and this
 slurm_log: "./slurmlog/"            # optional. dir in which slurm output and error logs will be saved. Defaults to EXPERIMENTCONFIG.path
-
 
 ---
 # DEFAULT parameters (Optional)
@@ -24,21 +25,38 @@ params:
   action_space_type: 'discrete'
   env_name: 'acrobot'
   algo_name: 'sac'
-  n_actions: 2500
+  n_games: 2500
   pre_steps: 100
   layers: [256, 256]
   lr: 0.003
 
 ---
-name: "rlv"
-path: "./output/"
+name: "rlv_experiment"
+path: "./output/rlv/"
 repetitions: 1   # repeat 8 times
 
+# Experiment Parameters
 params:
-  action_space_type: 'discrete'
-  env_name: 'acrobot'
+  algo_name: 'rlv'
+  ngames: 2000
+  warmup_steps: 400
+list:
+  lr: [0.003, 0.006]
+  layers: [[256, 256], [512, 512]]
+
+---
+name: "sac_experiment"
+path: "./output/sac/"
+repetitions: 1   # repeat 8 times
+
+# Experiment Parameters
+params:
   algo_name: 'sac'
-  n_games: 5000
-  pre_steps: 100
-  layers: [256, 256]
-  lr: 0.003
+  ngames: 2000
+  warmup_steps: 400
+list:
+  lr: [0.001, 0.003]
+
+
+
+
