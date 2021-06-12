@@ -24,4 +24,5 @@ class Experiment:
         algorithm = init_algorithm(self.algo_name, agent, env, self.env_name, n_games=self.n_games,
                                    pre_steps=self.pre_steps, warmup_steps=self.warmup_steps)
 
-        algorithm.run()
+        algorithm.run(plot=True)
+        env.close()
