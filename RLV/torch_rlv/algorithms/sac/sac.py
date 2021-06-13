@@ -23,7 +23,7 @@ class SAC:
         self.additional_data = additional_data
 
         self.figure_file = 'output/plots/SAC' + self.filename
-        self.date_time = '[' + datetime.now().strftime("%m/%d/%Y,%H:%M") + ']'
+        self.date_time = '[' + datetime.now().strftime("%m_%d_%Y_%H:%M") + ']'
 
         self.best_score = env.reward_range[0]
         self.score_history = score_history
@@ -64,7 +64,8 @@ class SAC:
                     self.env_obs.append(obs_img)
                     if step % self.plot_steps == 0 or done:
                         self.env_state = obs_img
-                        plot_env_step(self.env_state, step, 'output/videos/SAC_' + self.env_name + self.date_time)
+                        plot_env_step(self.env_state, step, 'output/plots/SAC_' + self.env_name
+                                      + '_' + self.date_time[1:-1])
 
                 observation = observation_
                 step += 1
@@ -83,7 +84,8 @@ class SAC:
                   ' score %.1f' % score, ' avg_score %.1f' % avg_score)
 
         if plot:
-            animate_env_obs(self.env_obs, 'output/videos/SAC_' + self.env_name + self.date_time)
+            animate_env_obs(self.env_obs, 'output/videos/SAC_' + self.env_name
+                            + '_' + self.date_time[1:-1])
             x = [i + 1 for i in range(self.steps)]
             plot_learning_curve(x, self.score_history, self.figure_file)
 

@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_pdf import PdfPages
 import matplotlib.animation as animation
+import os
 
 
 def plot_learning_curve(x, scores, figure_file):
@@ -14,11 +15,14 @@ def plot_learning_curve(x, scores, figure_file):
 
 
 def plot_env_step(img, step, name=None):
-    with PdfPages(name) as pdf:
-        f = plt.figure()
-        f.figimage(img)
+    filename = name + '.pdf'
+    print(filename)
+    with PdfPages(filename) as pdf:
+        print(filename)
+        plt.figure()
+        plt.imshow(img)
         plt.title('Step %d' % step)
-        pdf.savefig(img)
+        pdf.savefig()
         plt.close()
 
 
