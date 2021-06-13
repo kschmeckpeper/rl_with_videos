@@ -1,23 +1,25 @@
-# Slurm config bwuni gpu
+---
 name: "SLURM"   # MUST BE "SLURM"
-partition: "gpu_8"  # "single" for cpu, "gpu_4" or gpu_8" for gpu
-job-name: "rlvandsac" # this will be the experiment's name in slurm
-num_parallel_jobs: 8  # max number of jobs executed in parallel
-ntasks: 1   #  leave that like it is
-cpus-per-task: 1   # there are 5 cores for each GPU on the gpu_8 queue and 10 per GPU on the gpu_4 queue. Never use 5! don't ask why!
-time: 40:00:00
-mem-per-cpu: 90000 # Optional - Cluster specific
-sbatch_args:   # gpus need to be explicitly requested using this
-  gres: "gpu:1" #and this
-slurm_log: "./slurmlog/"            # optional. dir in which slurm output and error logs will be saved. Defaults to EXPERIMENTCONFIG.path
+# Required
+partition: "single"
+job-name: "RLV"    # this will be the experiments name in slurm
+num_parallel_jobs: 10
+ntasks: 1
+cpus-per-task: 1
+mem-per-cpu: 8000
+time: 1440  # in minutes
+sbatch_args: # Dictionary of SBATCH keywords and arguments
+  distribution: cyclic  # To have repetitions of the same exp be distributed to different nodes
+slurm_log: "./slurmlog/"
+
 
 ---
 # DEFAULT parameters (Optional)
 name: "DEFAULT"   # MUST BE DEFAULT
-
-# Implementation default parameters
-path: "./output/"   # location to save results in
+path: "./output/rlv"   # location to save results in
 repetitions: 1  # number of times one set of parameters is run
+reps_per_job: 1 # number of repetitions in each job. useful for paralellization. defaults to 1.
+reps_in_parallel: 8 # number of repetitions in each job that are executed in parallel. defaults to 1.
 
 params:
   # this is where you specify all parameters needed for your experiment.
