@@ -113,7 +113,8 @@ class RLV:
             self.score_history = self.algorithm.get_score_history()
             if plot:
                 env_step = self.algorithm.get_env_state()
-                plot_env_step(env_step, self.steps_count, 'output/videos/RLV_' + self.env_name + self.date_time)
+                plot_env_step(env_step, self.steps_count, 'output/plots/RLV_' + self.env_name
+                              + '_' + self.date_time[1:-1])
             p_steps = 0
 
             # Update Inverse Model
@@ -126,6 +127,6 @@ class RLV:
 
         if plot:
             observations = self.algorithm.get_env_obs()
-            animate_env_obs(observations, 'output/videos/RLV_' + self.env_name + self.date_time)
+            animate_env_obs(observations, 'output/videos/RLV_' + self.env_name + '_' + self.date_time[1:-1])
             x = [i + 1 for i in range(len(self.score_history))]
             plot_learning_curve(x, self.score_history, self.figure_file)
