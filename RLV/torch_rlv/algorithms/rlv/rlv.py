@@ -133,18 +133,17 @@ class RLV:
             self.steps_count = self.algorithm.get_step_count()
             self.score_history = self.algorithm.get_score_history()
 
-            # Plot in pdf file with visualizer
-            if plot:
-                env_step = self.algorithm.get_env_state()
-                plot_env_step(env_step, self.steps_count, 'output/plots/RLV_' + self.env_name
-                              + '_' + self.date_time)
             p_steps = 0
 
             # Update Inverse Model
             loss.backward()
             self.inverse_model.optimizer.step()
 
+        # Plot in pdf file with visualizer
         if plot:
+            env_states = self.algorithm.get_env_states()
+            plot_env_step(env_states, 'output/plots/SAC_' + self.env_name
+                          + '_' + self.date_time)
             observations = self.algorithm.get_env_obs()
             animate_env_obs(observations, 'output/videos/RLV_' + self.env_name + '_' + self.date_time)
             x = [i + 1 for i in range(len(self.score_history))]

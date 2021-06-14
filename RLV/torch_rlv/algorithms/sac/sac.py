@@ -1,5 +1,5 @@
 import numpy as np
-from RLV.torch_rlv.visualizer.plot import plot_learning_curve, plot_env_step, animate_env_obs
+from RLV.torch_rlv.visualizer.plot import plot_env_step, animate_env_obs
 from datetime import datetime
 import wandb
 
@@ -31,7 +31,7 @@ class SAC:
         # best score, score_history to calculate average score
         self.best_score = env.reward_range[0]
         self.score_history = score_history
-        self.env_state = None
+        self.env_states = []
         self.env_obs = []
 
         # if SAC is used in RLV, log additional parameters which are in rlv_config in wandb
@@ -86,9 +86,7 @@ class SAC:
                     obs_img = self.env.render(mode='rgb_array')
                     self.env_obs.append(obs_img)
                     if step % self.plot_steps == 0 or done:
-                        self.env_state = obs_img
-                        plot_env_step(self.env_state, step, 'output/plots/SAC_' + self.env_name
-                                      + '_' + self.date_time)
+                        self.env_states.append(obs_img)
 
                 observation = observation_
                 step += 1
@@ -113,10 +111,10 @@ class SAC:
                   ' score %.1f' % score, ' avg_score %.1f' % avg_score)
 
         if plot:
+            plot_env_step(self.env_states, 'output/plots/SAC_' + self.env_name
+                          + '_' + self.date_time)
             animate_env_obs(self.env_obs, 'output/videos/SAC_' + self.env_name
                             + '_' + self.date_time)
-            x = [i + 1 for i in range(self.steps)]
-            plot_learning_curve(x, self.score_history, self.figure_file)
 
     def get_score_history(self):
         return self.score_history
@@ -124,8 +122,8 @@ class SAC:
     def get_step_count(self):
         return self.steps_count
 
-    def get_env_state(self):
-        return self.env_state
+    def get_env_states(self):
+        return self.env_states
 
     def get_env_obs(self):
         return self.env_obs
