@@ -7,7 +7,7 @@ import wandb
 class SAC:
     def __init__(self, env_name, env, agent, n_games=2500, load_checkpoint=False, steps=100,
                  pre_steps=100, steps_count=0, plot_steps=250, lr=0.003, score_history=None,
-                 additional_data=None, project='new_sac_rlv', rlv_config=None, experiment_name='SAC'):
+                 additional_data=None, project='NEW_225k_sac_rlv', rlv_config=None, experiment_name='SAC'):
         super(SAC, self).__init__()
         if score_history is None:
             score_history = []

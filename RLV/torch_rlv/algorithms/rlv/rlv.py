@@ -37,10 +37,9 @@ class RLV:
 
     def get_action_free_buffer(self):
         steps = 0
-        pre_training = SAC(env_name=self.env_name, env=self.env, agent=self.agent,
-                           n_games=1, pre_steps=100, score_history=self.score_history,
-                           additional_data=None, steps_count=0,
-                           lr=self.lr, rlv_config=None, experiment_name=self.experiment_name)
+        pre_train_agent = self.agent
+        pre_training = SAC(env_name=self.env_name, env=self.env, agent=pre_train_agent,
+                           n_games=20000, pre_steps=100, lr=self.lr, experiment_name=self.experiment_name)
         while steps < self.pre_training_steps:
             pre_training.run()
             steps = pre_training.steps_count
