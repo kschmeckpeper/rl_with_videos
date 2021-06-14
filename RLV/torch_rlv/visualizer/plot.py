@@ -22,7 +22,7 @@ def plot_env_step(imgs, name=None):
             plt.imshow(img)
             plt.title('Step %d' % i)
             pdf.savefig()
-        plt.close()
+            plt.close()
 
 
 def animate_env_obs(imgs, name):

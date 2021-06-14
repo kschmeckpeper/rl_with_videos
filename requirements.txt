@@ -15,7 +15,7 @@ cachetools==3.0.0
 certifi==2020.4.5.1
 cffi==1.11.5
 chardet==3.0.4
-Click==7.0
+Click~=8.0.1
 cloudpickle==1.2.2
 colorama==0.3.9
 cryptography==2.3.1
@@ -41,7 +41,7 @@ google-auth-httplib2==0.0.3
 google-compute-engine==2.8.13
 grpcio==1.16.1
 gtimer==1.0.0b5
-gym==0.15.4
+gym~=0.18.0
 h5py==2.8.0
 httplib2==0.12.0
 idna==2.7
@@ -59,7 +59,7 @@ kiwisolver==1.0.1
 lockfile==0.12.2
 lz4==3.0.2
 Markdown==3.0.1
-matplotlib==3.0.2
+matplotlib~=3.4.2
 -e git+https://github.com/kschmeckpeper/metaworld.git@1d0d2c4d965b64b97723cadfeb635744968593e5#egg=metaworld
 mock==4.0.2
 monotonic==1.5
@@ -108,7 +108,7 @@ ruamel.yaml==0.17.4
 s3transfer==0.2.0
 scikit-image==0.14.2
 scikit-learn==0.20.1
-scipy==1.1.0
+scipy~=1.6.3
 -e git+https://github.com/hartikainen/serializable.git@76516385a3a716ed4a2a9ad877e2d5cbcf18d4e6#egg=serializable
 setproctitle==1.1.10
 six==1.11.0
@@ -133,3 +133,5 @@ zipp==3.1.0
 
 torch~=1.8.1
 setuptools~=56.2.0
+wandb~=0.10.32
+cw2~=1.0.0

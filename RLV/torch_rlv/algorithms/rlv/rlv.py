@@ -18,7 +18,7 @@ class RLV:
     def __init__(self, env_name, env, agent, iterations=500, warmup_steps=500, base_algorithm=None, lr=0.003,
                  experiment_name='RLV', pre_steps=1000, pre_training_steps=25000):
         super(RLV, self).__init__()
-        self.experiment_name=experiment_name
+        self.experiment_name = experiment_name
         self.env_name = env_name
         self.env = env
         self.steps_count = 0
@@ -47,7 +47,7 @@ class RLV:
         return pre_training.agent.memory
 
     def warmup_inverse_model(self, warmup_steps):
-        for iter in range(0, warmup_steps):
+        for itrn in range(0, warmup_steps):
             state_obs, target, reward, next_state_obs, done_obs \
                 = self.agent.memory_action_free.sample_buffer(self.agent.batch_size)
             done_obs = np.reshape(done_obs, (256, 1))
@@ -65,8 +65,8 @@ class RLV:
             self.inverse_model.optimizer.zero_grad()
             loss = self.inverse_model.criterion(action_obs_t, target_t)
 
-            if iter % 50 == 0:
-                print(f"Warmup Step: {iter} - Loss Inverse Model: {loss}")
+            if itrn % 50 == 0:
+                print(f"Warmup Step: {itrn} - Loss Inverse Model: {loss}")
 
             # Update Inverse Model
             loss.backward()
@@ -78,7 +78,7 @@ class RLV:
 
         self.warmup_inverse_model(warmup_steps=self.warmup_steps)
 
-        for iter in range(0, self.iterations):
+        for itrn in range(0, self.iterations):
             state_obs, target, reward, next_state_obs, done_obs \
                 = self.agent.memory_action_free.sample_buffer(self.agent.batch_size)
             done_obs = np.reshape(done_obs, (256, 1))
@@ -108,7 +108,7 @@ class RLV:
             target_t = T.from_numpy(target).float()
             self.inverse_model.optimizer.zero_grad()
             loss = self.inverse_model.criterion(action_obs_t, target_t)
-            print(f"Iteration: {iter} - Loss Inverse Model: {loss}")
+            print(f"Iteration: {itrn} - Loss Inverse Model: {loss}")
 
             rlv_args = {
                 'experiment_name': 'rlv_exp_' + str(self.lr),
@@ -124,10 +124,10 @@ class RLV:
                                      additional_data=observational_batch, steps_count=self.steps_count,
                                      lr=self.lr, rlv_config=rlv_args, experiment_name=self.experiment_name)
             # execute pre steps only in first iteration
-            if iter > 0:
-                self.algorithm.run(cnt=iter, execute_pre_steps=False)
+            if itrn > 0:
+                self.algorithm.run(cnt=itrn, execute_pre_steps=False)
             else:
-                self.algorithm.run(cnt=iter)
+                self.algorithm.run(cnt=itrn)
 
             # update steps count of RLV based on steps executed in SAC
             self.steps_count = self.algorithm.get_step_count()
