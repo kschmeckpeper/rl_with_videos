@@ -38,7 +38,7 @@ name: "rlv_ex"
 path: "./output/rlv/"
 repetitions: 5   # repeat 8 times
 
- Experiment Parameters
+# Experiment Parameters
 params:
   experiment_name: "rlv_exp"
   algo_name: 'rlv'
@@ -46,7 +46,6 @@ params:
   warmup_steps: 400
 list:
   lr: [0.003, 0.006, 0.001]
-  layers: [[256, 256], [256, 256], [512, 512]]
 
 ---
 name: "sac_ex"
