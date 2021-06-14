@@ -22,7 +22,7 @@ class Experiment:
         env = get_environment(self.env_name)
         agent = get_agent(env, self.action_space_type,  self)
         algorithm = init_algorithm(self.algo_name, agent, env, self.env_name, n_games=self.n_games,
-                                   pre_steps=self.pre_steps, warmup_steps=self.warmup_steps)
+                                   pre_steps=self.pre_steps, warmup_steps=self.warmup_steps, lr=self.lr)
 
-        algorithm.run(plot=True)
+        algorithm.run()
         env.close()

@@ -4,6 +4,7 @@ from RLV.torch_rlv.algorithms.sac.sac import SAC
 from RLV.torch_rlv.visualizer.plot import plot_learning_curve, plot_env_step, animate_env_obs
 import numpy as np
 from datetime import datetime
+import wandb
 
 
 def set_reward(reward):
@@ -14,11 +15,12 @@ def set_reward(reward):
 
 
 class RLV:
-    def __init__(self, env_name, env, agent, iterations=500, warmup_steps=500, base_algorithm=None):
+    def __init__(self, env_name, env, agent, iterations=500, warmup_steps=500, base_algorithm=None, lr=0.003):
         super(RLV, self).__init__()
         self.env_name = env_name
         self.env = env
         self.steps_count = 0
+        self.lr = lr
         self.warmup_steps = warmup_steps
         self.score_history = []
         self.agent = agent
@@ -26,7 +28,7 @@ class RLV:
         self.iterations = iterations  # TODO
         self.filename = env_name + '.png'
         self.figure_file = 'output/plots/RLV_' + self.filename
-        self.date_time = '[' + datetime.now().strftime("%m/%d/%Y,%H:%M") + ']'
+        self.date_time = datetime.now().strftime("%m/%d/%Y,%H:%M")
         self.algorithm = base_algorithm
 
     def fill_action_free_buffer(self):
@@ -43,7 +45,7 @@ class RLV:
                 observation = observation_
 
     def warmup_inverse_model(self, warmup_steps):
-        for x in range(0, warmup_steps):
+        for iter in range(0, warmup_steps):
             state_obs, target, reward, next_state_obs, done_obs \
                 = self.agent.memory_action_free.sample_buffer(self.agent.batch_size)
             done_obs = np.reshape(done_obs, (256, 1))
@@ -57,11 +59,14 @@ class RLV:
             for __ in range(0, self.agent.batch_size):
                 reward_obs[__] = set_reward(reward[__])
 
-            # Update Inverse Model
             target_t = T.from_numpy(target).float()
             self.inverse_model.optimizer.zero_grad()
             loss = self.inverse_model.criterion(action_obs_t, target_t)
-            print(f"Warmup Step: {x} - Loss Inverse Model: {loss}")
+
+            if iter % 50 == 0:
+                print(f"Warmup Step: {iter} - Loss Inverse Model: {loss}")
+
+            # Update Inverse Model
             loss.backward()
             self.inverse_model.optimizer.step()
 
@@ -72,7 +77,7 @@ class RLV:
 
         self.warmup_inverse_model(warmup_steps=self.warmup_steps)
 
-        for x in range(0, self.iterations):
+        for iter in range(0, self.iterations):
             state_obs, target, reward, next_state_obs, done_obs \
                 = self.agent.memory_action_free.sample_buffer(self.agent.batch_size)
             done_obs = np.reshape(done_obs, (256, 1))
@@ -98,35 +103,48 @@ class RLV:
                 'done_obs': done_obs
             }
 
-            # perform sac based on initial data obtained by environment step plus additional
-            # observational data
-
-            if self.algorithm is None:
-                self.algorithm = SAC(env_name=self.env_name, env=self.env, agent=self.agent,
-                                     n_games=1, pre_steps=p_steps, score_history=self.score_history,
-                                     additional_data=observational_batch, steps_count=self.steps_count)
-            if x > 0:
-                self.algorithm.run(cnt=x, execute_pre_steps=False)
-            else:
-                self.algorithm.run(cnt=x)
-            self.steps_count = self.algorithm.get_step_count()
-            self.score_history = self.algorithm.get_score_history()
-            if plot:
-                env_step = self.algorithm.get_env_state()
-                plot_env_step(env_step, self.steps_count, 'output/plots/RLV_' + self.env_name
-                              + '_' + self.date_time[1:-1])
-            p_steps = 0
-
-            # Update Inverse Model
+            # Inverse Model
             target_t = T.from_numpy(target).float()
             self.inverse_model.optimizer.zero_grad()
             loss = self.inverse_model.criterion(action_obs_t, target_t)
-            print(f"Iteration: {x} - Loss Inverse Model: {loss}")
+            print(f"Iteration: {iter} - Loss Inverse Model: {loss}")
+
+            rlv_args = {
+                'experiment_name': 'rlv_exp_' + str(self.lr),
+                'loss_inverse_model': loss,
+                'warmup_steps': self.warmup_steps
+            }
+
+            # perform sac based on initial data obtained by environment step plus additional
+            # observational data
+            if self.algorithm is None:
+                self.algorithm = SAC(env_name=self.env_name, env=self.env, agent=self.agent,
+                                     n_games=1, pre_steps=p_steps, score_history=self.score_history,
+                                     additional_data=observational_batch, steps_count=self.steps_count,
+                                     lr=self.lr, rlv_config=rlv_args)
+            # execute pre steps only in first iteration
+            if iter > 0:
+                self.algorithm.run(cnt=iter, execute_pre_steps=False)
+            else:
+                self.algorithm.run(cnt=iter)
+
+            # update steps count of RLV based on steps executed in SAC
+            self.steps_count = self.algorithm.get_step_count()
+            self.score_history = self.algorithm.get_score_history()
+
+            # Plot in pdf file with visualizer
+            if plot:
+                env_step = self.algorithm.get_env_state()
+                plot_env_step(env_step, self.steps_count, 'output/plots/RLV_' + self.env_name
+                              + '_' + self.date_time)
+            p_steps = 0
+
+            # Update Inverse Model
             loss.backward()
             self.inverse_model.optimizer.step()
 
         if plot:
             observations = self.algorithm.get_env_obs()
-            animate_env_obs(observations, 'output/videos/RLV_' + self.env_name + '_' + self.date_time[1:-1])
+            animate_env_obs(observations, 'output/videos/RLV_' + self.env_name + '_' + self.date_time)
             x = [i + 1 for i in range(len(self.score_history))]
             plot_learning_curve(x, self.score_history, self.figure_file)

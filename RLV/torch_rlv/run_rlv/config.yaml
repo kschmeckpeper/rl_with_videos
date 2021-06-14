@@ -32,31 +32,31 @@ params:
   layers: [256, 256]
   lr: 0.003
 
-#---
-#name: "rlv_experiment"
-#path: "./output/rlv/"
-#repetitions: 1   # repeat 8 times
-#
-## Experiment Parameters
-#params:
-#  algo_name: 'rlv'
-#  ngames: 2000
-#  warmup_steps: 400
-#list:
-#  lr: [0.003, 0.006]
-#  layers: [[256, 256], [512, 512]]
-
 ---
-name: "sac_experiment"
-path: "./output/sac/"
+name: "rlv_experiment"
+path: "./output/rlv/"
 repetitions: 1   # repeat 8 times
 
 # Experiment Parameters
 params:
-  algo_name: 'sac'
+  algo_name: 'rlv'
   ngames: 2000
   warmup_steps: 400
-  lr: 0.003
+list:
+  lr: [0.003, 0.006]
+  layers: [[256, 256], [512, 512]]
+
+#---
+#name: "sac_experiment"
+#path: "./output/sac/"
+#repetitions: 1   # repeat 8 times
+
+# Experiment Parameters
+#params:
+#  algo_name: 'sac'
+#  ngames: 2000
+#  warmup_steps: 400
+#  lr: 0.003
 #list:
 #  lr: [0.001, 0.003]
 
