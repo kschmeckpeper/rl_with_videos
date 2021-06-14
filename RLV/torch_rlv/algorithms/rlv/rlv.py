@@ -30,7 +30,7 @@ class RLV:
         self.iterations = iterations  # TODO
         self.filename = env_name + '.png'
         self.figure_file = 'output/plots/RLV_' + self.filename
-        self.date_time = datetime.now().strftime("%m/%d/%Y,%H:%M")
+        self.date_time = datetime.now().strftime("%m_%d_%Y_%H:%M")
         self.algorithm = base_algorithm
 
     def fill_action_free_buffer(self):
