@@ -15,8 +15,10 @@ def set_reward(reward):
 
 
 class RLV:
-    def __init__(self, env_name, env, agent, iterations=500, warmup_steps=500, base_algorithm=None, lr=0.003):
+    def __init__(self, env_name, env, agent, iterations=500, warmup_steps=500, base_algorithm=None, lr=0.003,
+                 experiment_name='RLV'):
         super(RLV, self).__init__()
+        self.experiment_name=experiment_name
         self.env_name = env_name
         self.env = env
         self.steps_count = 0
@@ -121,7 +123,7 @@ class RLV:
                 self.algorithm = SAC(env_name=self.env_name, env=self.env, agent=self.agent,
                                      n_games=1, pre_steps=p_steps, score_history=self.score_history,
                                      additional_data=observational_batch, steps_count=self.steps_count,
-                                     lr=self.lr, rlv_config=rlv_args)
+                                     lr=self.lr, rlv_config=rlv_args, experiment_name=self.experiment_name)
             # execute pre steps only in first iteration
             if iter > 0:
                 self.algorithm.run(cnt=iter, execute_pre_steps=False)

@@ -6,12 +6,13 @@ import wandb
 
 class SAC:
     def __init__(self, env_name, env, agent, n_games=2500, load_checkpoint=False, steps=100,
-                 pre_steps=100, steps_count=0, plot_steps=250, lr=0.003,
-                 score_history=None, additional_data=None, project='rlv_2021', rlv_config=None):
+                 pre_steps=100, steps_count=0, plot_steps=250, lr=0.003, score_history=None,
+                 additional_data=None, project='sac_and_rlv', rlv_config=None, experiment_name='SAC'):
         super(SAC, self).__init__()
         if score_history is None:
             score_history = []
         self.env_name = env_name
+        self.experiment_name = experiment_name
         self.env = env
         self.agent = agent
         self.lr = lr
@@ -37,10 +38,7 @@ class SAC:
         self.rlv_config = rlv_config
 
     def run(self, cnt=-1, plot=False, execute_pre_steps=True):
-        if self.rlv_config is not None:
-            run_name = self.rlv_config['experiment_name']
-        else:
-            run_name = 'sac_exp_' + str(self.lr)
+        run_name = self.experiment_name + str(self.lr)
         wandb.init(project=self.project, name=run_name)
 
         # initial logging parameters when SAC is used
