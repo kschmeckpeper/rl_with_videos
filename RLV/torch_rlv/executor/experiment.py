@@ -16,6 +16,7 @@ class Experiment:
         self.n_games = config['n_games']
         self.pre_steps = config['pre_steps']
         self.warmup_steps = config['warmup_steps']
+        self.pre_training_steps = config['pre_training_steps']
         self.layers = config['layers']
         self.lr = config['lr']
 
@@ -24,7 +25,7 @@ class Experiment:
         agent = get_agent(env, self.action_space_type,  self)
         algorithm = init_algorithm(self.algo_name, agent, env, self.env_name, n_games=self.n_games,
                                    pre_steps=self.pre_steps, warmup_steps=self.warmup_steps, lr=self.lr,
-                                   exp_name=self.experiment_name)
+                                   exp_name=self.experiment_name, pre_training_steps=self.pre_training_steps)
 
         algorithm.run()
         env.close()

@@ -17,7 +17,7 @@ slurm_log: "./slurmlog/"
 # DEFAULT parameters (Optional)
 name: "DEFAULT"   # MUST BE DEFAULT
 path: "./output/rlv"   # location to save results in
-repetitions: 1  # number of times one set of parameters is run
+repetitions: 3  # number of times one set of parameters is run
 reps_per_job: 1 # number of repetitions in each job. useful for paralellization. defaults to 1.
 reps_in_parallel: 8 # number of repetitions in each job that are executed in parallel. defaults to 1.
 
@@ -28,7 +28,8 @@ params:
   env_name: 'acrobot'
   algo_name: 'sac'
   n_games: 2500
-  pre_steps: 100
+  pre_steps: 1000
+  pre_training_steps: 25000
   layers: [256, 256]
   lr: 0.003
 
@@ -44,8 +45,8 @@ params:
   ngames: 2000
   warmup_steps: 400
 list:
-  lr: [0.003, 0.006]
-#  layers: [[256, 256], [512, 512]]
+  lr: [0.003, 0.006, 0.001]
+  layers: [[256, 256], [256, 256], [512, 512]]
 
 ---
 name: "sac_ex"
@@ -59,7 +60,7 @@ params:
   ngames: 2000
   warmup_steps: 400
 list:
-  lr: [0.003, 0.006]
+  lr: [0.003, 0.006, 0.001]
 
 
 

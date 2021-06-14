@@ -16,14 +16,16 @@ def set_reward(reward):
 
 class RLV:
     def __init__(self, env_name, env, agent, iterations=500, warmup_steps=500, base_algorithm=None, lr=0.003,
-                 experiment_name='RLV'):
+                 experiment_name='RLV', pre_steps=1000, pre_training_steps=25000):
         super(RLV, self).__init__()
         self.experiment_name=experiment_name
         self.env_name = env_name
         self.env = env
         self.steps_count = 0
         self.lr = lr
+        self.pre_steps = pre_steps
         self.warmup_steps = warmup_steps
+        self.pre_training_steps = pre_training_steps
         self.score_history = []
         self.agent = agent
         self.inverse_model = InverseModelNetwork(beta=0.0003, input_dims=13)
@@ -33,18 +35,16 @@ class RLV:
         self.date_time = datetime.now().strftime("%m_%d_%Y_%H:%M")
         self.algorithm = base_algorithm
 
-    def fill_action_free_buffer(self):
-        observation = self.env.reset()
-        for _ in range(0, self.agent.batch_size):
-            act = self.agent.choose_action(observation)
-            action = np.zeros(3)
-            action[act] = 1
-            observation_, reward, done, info = self.env.step(act)
-            self.agent.remember_action_free(observation, action, reward, observation_, done)
-            if done:
-                observation = self.env.reset()
-            else:
-                observation = observation_
+    def get_action_free_buffer(self):
+        steps = 0
+        pre_training = SAC(env_name=self.env_name, env=self.env, agent=self.agent,
+                           n_games=1, pre_steps=100, score_history=self.score_history,
+                           additional_data=None, steps_count=0,
+                           lr=self.lr, rlv_config=None, experiment_name=self.experiment_name)
+        while steps < self.pre_training_steps:
+            pre_training.run()
+            steps = pre_training.steps_count
+        return pre_training.agent.memory
 
     def warmup_inverse_model(self, warmup_steps):
         for iter in range(0, warmup_steps):
@@ -73,9 +73,8 @@ class RLV:
             self.inverse_model.optimizer.step()
 
     def run(self, plot=False):
-        p_steps = 100
-        for _ in range(0, self.iterations):
-            self.fill_action_free_buffer()
+        p_steps = self.pre_steps
+        self.agent.memory_action_free = self.get_action_free_buffer()
 
         self.warmup_inverse_model(warmup_steps=self.warmup_steps)
 
