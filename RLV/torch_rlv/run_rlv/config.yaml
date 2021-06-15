@@ -29,14 +29,14 @@ params:
   algo_name: 'sac'
   n_games: 2500
   pre_steps: 1000
-  pre_training_steps: 25000
+  pre_training_steps: 225000
   layers: [256, 256]
   lr: 0.003
 
 ---
 name: "rlv_ex"
 path: "./output/rlv/"
-repetitions: 1   # repeat 8 times
+repetitions: 5   # repeat 8 times
 
 # Experiment Parameters
 params:
@@ -46,12 +46,11 @@ params:
   warmup_steps: 400
 list:
   lr: [0.003, 0.006, 0.001]
-  layers: [[256, 256], [256, 256], [512, 512]]
 
 ---
 name: "sac_ex"
 path: "./output/sac/"
-repetitions: 1   # repeat 8 times
+repetitions: 5   # repeat 8 times
 
 # Experiment Parameters
 params:
