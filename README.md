@@ -43,7 +43,7 @@ To run RLV, first download a replay pool containing the desired observations.  Y
 | Avg. Reward | Link |
 | :----- | :----- |
 | -99 | [here](https://drive.google.com/file/d/16Je5LcjTM_7VJ4oEjxNrAyoXhFdzHrwT/view?usp=sharing) |
-| -79 | [here](https://drive.google.com/file/d/16Je5LcjTM_7VJ4oEjxNrAyoXhFdzHrwT/view?usp=sharing) |
+| -79 | [here](https://drive.google.com/file/d/10v6TPAjQEoj9649qx4b76siwzTNwGL-8/view?usp=sharing) |
 | -63 | [here](https://drive.google.com/file/d/15pqxuLvD-PjkWsdZl2FRyekpOhC88LPE/view?usp=sharing) |
 
 Then, run the following commands.
